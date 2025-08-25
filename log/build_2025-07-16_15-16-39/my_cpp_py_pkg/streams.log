@@ -1,0 +1,29 @@
+[0.024s] Invoking command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4
+[0.059s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.086s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.355s] -- Found rclcpp: 2.4.3 (/opt/ros/foxy/share/rclcpp/cmake)
+[0.513s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.517s] -- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[3.403s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[3.461s] -- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)
+[3.463s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[3.626s] CMake Error at CMakeLists.txt:28 (install):
+[3.626s]   install TARGETS given target "minimal_cpp_node" which does not exist.
+[3.626s] 
+[3.626s] 
+[3.626s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[3.707s] -- Added test 'copyright' to check source files copyright and LICENSE
+[3.709s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[3.709s] -- Configured cppcheck include dirs: 
+[3.710s] -- Configured cppcheck exclude dirs and/or files: 
+[3.710s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[3.710s] -- Configured cpplint exclude dirs and/or files: 
+[3.711s] -- Added test 'lint_cmake' to check CMake code style
+[3.713s] -- Added test 'uncrustify' to check C / C++ code style
+[3.713s] -- Configured uncrustify additional arguments: 
+[3.713s] -- Added test 'xmllint' to check XML markup files
+[3.717s] -- Configuring incomplete, errors occurred!
+[3.717s] See also "/home/emelie/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/CMakeOutput.log".
+[3.717s] See also "/home/emelie/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/CMakeError.log".
+[3.725s] make: *** [Makefile:222: cmake_check_build_system] Error 1
+[3.728s] Invoked command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4

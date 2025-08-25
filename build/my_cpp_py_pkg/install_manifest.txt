@@ -1,0 +1,16 @@
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/my_cpp_node
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/package_run_dependencies/my_cpp_py_pkg
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/parent_prefix_path/my_cpp_py_pkg
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.sh
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.dsv
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.sh
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.dsv
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.bash
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.sh
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.zsh
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.dsv
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.dsv
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/packages/my_cpp_py_pkg
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig.cmake
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig-version.cmake
+/home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.xml
