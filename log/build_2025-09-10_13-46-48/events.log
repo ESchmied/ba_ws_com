@@ -1,0 +1,491 @@
+[0.000000] (-) TimerEvent: {}
+[0.001652] (my_cpp_py_pkg) JobQueued: {'identifier': 'my_cpp_py_pkg', 'dependencies': OrderedDict()}
+[0.002261] (my_cpp_py_pkg) JobStarted: {'identifier': 'my_cpp_py_pkg'}
+[0.030016] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'cmake'}
+[0.031730] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'build'}
+[0.033274] (my_cpp_py_pkg) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', '--', '-j4', '-l4'], 'cwd': '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'emelie'), ('GIT_ASKPASS', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/home/emelie/ba_ws_com/install/turtlesim/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/emelie'), ('OLDPWD', '/home/emelie'), ('TERM_PROGRAM_VERSION', '1.103.2'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-cb40fea6-a8a0-4a81-b520-e3b824d18eeb.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/node'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-20.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/emelie/ba_ws_com/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'emelie'), ('NAME', 'Code'), ('WSL_INTEROP', '/run/WSL/2041_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/foxy/bin:/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/bin/remote-cli:/home/emelie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/WindowsApps/CanonicalGroupLimited.Ubuntu20.04LTS_2004.6.16.0_x64__79rhkp1fndgsc:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files/apache-maven-3.9.1/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Program Files/WireGuard/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/:/mnt/c/Users/Admin/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2023.1/bin:/mnt/c/Users/Admin/AppData/Local/Programs/Microsoft VS Code/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-33767168d4.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/emelie/ba_ws_com/install/turtlesim/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/opt/ros/foxy'), ('WSLENV', 'ELECTRON_RUN_AS_NODE/w:')]), 'shell': False}
+[0.094218] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)\n'}
+[0.099158] (-) TimerEvent: {}
+[0.147967] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[0.199326] (-) TimerEvent: {}
+[0.299807] (-) TimerEvent: {}
+[0.400301] (-) TimerEvent: {}
+[0.473246] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Found rclcpp: 2.4.3 (/opt/ros/foxy/share/rclcpp/cmake)\n'}
+[0.500446] (-) TimerEvent: {}
+[0.601266] (-) TimerEvent: {}
+[0.702364] (-) TimerEvent: {}
+[0.712765] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.717658] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)\n'}
+[0.802514] (-) TimerEvent: {}
+[0.902972] (-) TimerEvent: {}
+[1.003532] (-) TimerEvent: {}
+[1.104009] (-) TimerEvent: {}
+[1.204799] (-) TimerEvent: {}
+[1.305691] (-) TimerEvent: {}
+[1.406192] (-) TimerEvent: {}
+[1.506701] (-) TimerEvent: {}
+[1.607230] (-) TimerEvent: {}
+[1.707895] (-) TimerEvent: {}
+[1.808399] (-) TimerEvent: {}
+[1.908945] (-) TimerEvent: {}
+[2.009468] (-) TimerEvent: {}
+[2.109993] (-) TimerEvent: {}
+[2.210832] (-) TimerEvent: {}
+[2.312422] (-) TimerEvent: {}
+[2.413642] (-) TimerEvent: {}
+[2.514336] (-) TimerEvent: {}
+[2.615321] (-) TimerEvent: {}
+[2.715830] (-) TimerEvent: {}
+[2.816326] (-) TimerEvent: {}
+[2.916847] (-) TimerEvent: {}
+[3.017320] (-) TimerEvent: {}
+[3.117779] (-) TimerEvent: {}
+[3.218314] (-) TimerEvent: {}
+[3.318909] (-) TimerEvent: {}
+[3.419457] (-) TimerEvent: {}
+[3.520018] (-) TimerEvent: {}
+[3.620590] (-) TimerEvent: {}
+[3.721067] (-) TimerEvent: {}
+[3.821543] (-) TimerEvent: {}
+[3.922032] (-) TimerEvent: {}
+[4.046600] (-) TimerEvent: {}
+[4.147360] (-) TimerEvent: {}
+[4.248192] (-) TimerEvent: {}
+[4.348640] (-) TimerEvent: {}
+[4.449075] (-) TimerEvent: {}
+[4.549590] (-) TimerEvent: {}
+[4.650125] (-) TimerEvent: {}
+[4.750624] (-) TimerEvent: {}
+[4.851298] (-) TimerEvent: {}
+[4.951835] (-) TimerEvent: {}
+[5.052479] (-) TimerEvent: {}
+[5.154123] (-) TimerEvent: {}
+[5.202512] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[5.271473] (-) TimerEvent: {}
+[5.363988] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)\n'}
+[5.369342] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[5.371662] (-) TimerEvent: {}
+[5.472267] (-) TimerEvent: {}
+[5.572706] (-) TimerEvent: {}
+[5.673172] (-) TimerEvent: {}
+[5.678363] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)\n'}
+[5.773335] (-) TimerEvent: {}
+[5.814513] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[5.816657] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[5.817254] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/emelie/ba_ws_com/src/my_cpp_py_pkg/include>\n'}
+[5.817554] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[5.819914] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'cpplint' to check C / C++ code against the Google style\n"}
+[5.820273] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Configured cpplint exclude dirs and/or files: \n'}
+[5.821494] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[5.823595] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[5.823928] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[5.824480] (my_cpp_py_pkg) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[5.829412] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Configuring done\n'}
+[5.858919] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Generating done\n'}
+[5.862878] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Build files have been written to: /home/emelie/ba_ws_com/build/my_cpp_py_pkg\n'}
+[5.873562] (-) TimerEvent: {}
+[5.929251] (my_cpp_py_pkg) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target listener\x1b[0m\n'}
+[5.941457] (my_cpp_py_pkg) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target talker\x1b[0m\n'}
+[5.974577] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 33%] Built target my_cpp_node\n'}
+[5.974870] (-) TimerEvent: {}
+[6.033952] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/talker.dir/src/publisher_member_function.cpp.o\x1b[0m\n'}
+[6.041090] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 66%] \x1b[32mBuilding CXX object CMakeFiles/listener.dir/src/subscriber_member_function.cpp.o\x1b[0m\n'}
+[6.075883] (-) TimerEvent: {}
+[6.177531] (-) TimerEvent: {}
+[6.278272] (-) TimerEvent: {}
+[6.378800] (-) TimerEvent: {}
+[6.479273] (-) TimerEvent: {}
+[6.579795] (-) TimerEvent: {}
+[6.680331] (-) TimerEvent: {}
+[6.780917] (-) TimerEvent: {}
+[6.881426] (-) TimerEvent: {}
+[6.995959] (-) TimerEvent: {}
+[7.104265] (-) TimerEvent: {}
+[7.205102] (-) TimerEvent: {}
+[7.305712] (-) TimerEvent: {}
+[7.406287] (-) TimerEvent: {}
+[7.506825] (-) TimerEvent: {}
+[7.729346] (-) TimerEvent: {}
+[7.830904] (-) TimerEvent: {}
+[7.931993] (-) TimerEvent: {}
+[8.033088] (-) TimerEvent: {}
+[8.134173] (-) TimerEvent: {}
+[8.236327] (-) TimerEvent: {}
+[8.338193] (-) TimerEvent: {}
+[8.440686] (-) TimerEvent: {}
+[8.542631] (-) TimerEvent: {}
+[8.644825] (-) TimerEvent: {}
+[8.745367] (-) TimerEvent: {}
+[8.846510] (-) TimerEvent: {}
+[8.947816] (-) TimerEvent: {}
+[9.049025] (-) TimerEvent: {}
+[9.150567] (-) TimerEvent: {}
+[9.276948] (-) TimerEvent: {}
+[9.378068] (-) TimerEvent: {}
+[9.478928] (-) TimerEvent: {}
+[9.579673] (-) TimerEvent: {}
+[9.680253] (-) TimerEvent: {}
+[9.781749] (-) TimerEvent: {}
+[9.882228] (-) TimerEvent: {}
+[9.983022] (-) TimerEvent: {}
+[10.084494] (-) TimerEvent: {}
+[10.184999] (-) TimerEvent: {}
+[10.285481] (-) TimerEvent: {}
+[10.388658] (-) TimerEvent: {}
+[10.489964] (-) TimerEvent: {}
+[10.590600] (-) TimerEvent: {}
+[10.692529] (-) TimerEvent: {}
+[10.793586] (-) TimerEvent: {}
+[10.894108] (-) TimerEvent: {}
+[10.994510] (-) TimerEvent: {}
+[11.094934] (-) TimerEvent: {}
+[11.195641] (-) TimerEvent: {}
+[11.296506] (-) TimerEvent: {}
+[11.397054] (-) TimerEvent: {}
+[11.497619] (-) TimerEvent: {}
+[11.598107] (-) TimerEvent: {}
+[11.698772] (-) TimerEvent: {}
+[11.799472] (-) TimerEvent: {}
+[11.900150] (-) TimerEvent: {}
+[12.000695] (-) TimerEvent: {}
+[12.101266] (-) TimerEvent: {}
+[12.201830] (-) TimerEvent: {}
+[12.302417] (-) TimerEvent: {}
+[12.403492] (-) TimerEvent: {}
+[12.504113] (-) TimerEvent: {}
+[12.604602] (-) TimerEvent: {}
+[12.705110] (-) TimerEvent: {}
+[12.805927] (-) TimerEvent: {}
+[12.906434] (-) TimerEvent: {}
+[13.006917] (-) TimerEvent: {}
+[13.107699] (-) TimerEvent: {}
+[13.208405] (-) TimerEvent: {}
+[13.309856] (-) TimerEvent: {}
+[13.411418] (-) TimerEvent: {}
+[13.541059] (-) TimerEvent: {}
+[13.642422] (-) TimerEvent: {}
+[13.744811] (-) TimerEvent: {}
+[13.846499] (-) TimerEvent: {}
+[14.175939] (-) TimerEvent: {}
+[14.290951] (-) TimerEvent: {}
+[14.463738] (-) TimerEvent: {}
+[14.715912] (-) TimerEvent: {}
+[15.302293] (-) TimerEvent: {}
+[15.480470] (-) TimerEvent: {}
+[16.087502] (-) TimerEvent: {}
+[16.330229] (-) TimerEvent: {}
+[17.197195] (-) TimerEvent: {}
+[17.361325] (-) TimerEvent: {}
+[17.723880] (-) TimerEvent: {}
+[17.959029] (-) TimerEvent: {}
+[18.242520] (-) TimerEvent: {}
+[18.450275] (-) TimerEvent: {}
+[18.551429] (-) TimerEvent: {}
+[18.696842] (-) TimerEvent: {}
+[19.233100] (-) TimerEvent: {}
+[19.448367] (-) TimerEvent: {}
+[19.551013] (-) TimerEvent: {}
+[19.651831] (-) TimerEvent: {}
+[19.752686] (-) TimerEvent: {}
+[19.853991] (-) TimerEvent: {}
+[19.954917] (-) TimerEvent: {}
+[20.056358] (-) TimerEvent: {}
+[20.157699] (-) TimerEvent: {}
+[20.260195] (-) TimerEvent: {}
+[20.361340] (-) TimerEvent: {}
+[20.462922] (-) TimerEvent: {}
+[20.564330] (-) TimerEvent: {}
+[20.665615] (-) TimerEvent: {}
+[20.826088] (-) TimerEvent: {}
+[20.927278] (-) TimerEvent: {}
+[21.028160] (-) TimerEvent: {}
+[21.129026] (-) TimerEvent: {}
+[21.230186] (-) TimerEvent: {}
+[21.642348] (-) TimerEvent: {}
+[21.877382] (-) TimerEvent: {}
+[22.029225] (-) TimerEvent: {}
+[22.191119] (-) TimerEvent: {}
+[22.352731] (-) TimerEvent: {}
+[22.506819] (-) TimerEvent: {}
+[22.674458] (-) TimerEvent: {}
+[22.994928] (-) TimerEvent: {}
+[23.307127] (-) TimerEvent: {}
+[23.467378] (-) TimerEvent: {}
+[24.287216] (-) TimerEvent: {}
+[24.734988] (-) TimerEvent: {}
+[25.017594] (-) TimerEvent: {}
+[25.205273] (-) TimerEvent: {}
+[27.672797] (-) TimerEvent: {}
+[28.025468] (-) TimerEvent: {}
+[28.226813] (-) TimerEvent: {}
+[28.706480] (-) TimerEvent: {}
+[29.401248] (-) TimerEvent: {}
+[29.678335] (-) TimerEvent: {}
+[30.083763] (-) TimerEvent: {}
+[30.865953] (-) TimerEvent: {}
+[31.369029] (-) TimerEvent: {}
+[31.541046] (-) TimerEvent: {}
+[31.817131] (-) TimerEvent: {}
+[31.917934] (-) TimerEvent: {}
+[32.479719] (-) TimerEvent: {}
+[32.624665] (-) TimerEvent: {}
+[32.725785] (-) TimerEvent: {}
+[32.837854] (-) TimerEvent: {}
+[32.939932] (-) TimerEvent: {}
+[33.041755] (-) TimerEvent: {}
+[33.145206] (-) TimerEvent: {}
+[33.246169] (-) TimerEvent: {}
+[33.346989] (-) TimerEvent: {}
+[33.448304] (-) TimerEvent: {}
+[33.549578] (-) TimerEvent: {}
+[33.653749] (-) TimerEvent: {}
+[33.754690] (-) TimerEvent: {}
+[33.855327] (-) TimerEvent: {}
+[33.960500] (-) TimerEvent: {}
+[34.061313] (-) TimerEvent: {}
+[34.162036] (-) TimerEvent: {}
+[34.264705] (-) TimerEvent: {}
+[34.370148] (-) TimerEvent: {}
+[34.472895] (-) TimerEvent: {}
+[34.574156] (-) TimerEvent: {}
+[34.675553] (-) TimerEvent: {}
+[34.777519] (-) TimerEvent: {}
+[34.878695] (-) TimerEvent: {}
+[34.979616] (-) TimerEvent: {}
+[35.081271] (-) TimerEvent: {}
+[35.237785] (-) TimerEvent: {}
+[35.338793] (-) TimerEvent: {}
+[35.440009] (-) TimerEvent: {}
+[35.541003] (-) TimerEvent: {}
+[35.643559] (-) TimerEvent: {}
+[35.744617] (-) TimerEvent: {}
+[35.845252] (-) TimerEvent: {}
+[35.946607] (-) TimerEvent: {}
+[36.047917] (-) TimerEvent: {}
+[36.148996] (-) TimerEvent: {}
+[36.250262] (-) TimerEvent: {}
+[36.351416] (-) TimerEvent: {}
+[36.451931] (-) TimerEvent: {}
+[36.552582] (-) TimerEvent: {}
+[36.711217] (-) TimerEvent: {}
+[36.811739] (-) TimerEvent: {}
+[36.912693] (-) TimerEvent: {}
+[37.013869] (-) TimerEvent: {}
+[37.174690] (-) TimerEvent: {}
+[37.277391] (-) TimerEvent: {}
+[37.445408] (-) TimerEvent: {}
+[37.598589] (-) TimerEvent: {}
+[37.777928] (-) TimerEvent: {}
+[38.040207] (-) TimerEvent: {}
+[38.141343] (-) TimerEvent: {}
+[38.242807] (-) TimerEvent: {}
+[38.348410] (-) TimerEvent: {}
+[38.455322] (-) TimerEvent: {}
+[38.556480] (-) TimerEvent: {}
+[38.657693] (-) TimerEvent: {}
+[38.759115] (-) TimerEvent: {}
+[38.860439] (-) TimerEvent: {}
+[38.961098] (-) TimerEvent: {}
+[39.061960] (-) TimerEvent: {}
+[39.163759] (-) TimerEvent: {}
+[39.264807] (-) TimerEvent: {}
+[39.365280] (-) TimerEvent: {}
+[39.465882] (-) TimerEvent: {}
+[39.566666] (-) TimerEvent: {}
+[39.667780] (-) TimerEvent: {}
+[40.098043] (-) TimerEvent: {}
+[40.330041] (-) TimerEvent: {}
+[40.433295] (-) TimerEvent: {}
+[40.817812] (-) TimerEvent: {}
+[41.097204] (-) TimerEvent: {}
+[41.244627] (-) TimerEvent: {}
+[41.362985] (-) TimerEvent: {}
+[41.464087] (-) TimerEvent: {}
+[41.564886] (-) TimerEvent: {}
+[41.665979] (-) TimerEvent: {}
+[41.768179] (-) TimerEvent: {}
+[41.868909] (-) TimerEvent: {}
+[41.969988] (-) TimerEvent: {}
+[42.071079] (-) TimerEvent: {}
+[42.172595] (-) TimerEvent: {}
+[42.274874] (-) TimerEvent: {}
+[42.377890] (-) TimerEvent: {}
+[42.478923] (-) TimerEvent: {}
+[42.579962] (-) TimerEvent: {}
+[42.687607] (-) TimerEvent: {}
+[42.845721] (-) TimerEvent: {}
+[42.947263] (-) TimerEvent: {}
+[43.048578] (-) TimerEvent: {}
+[43.149940] (-) TimerEvent: {}
+[43.250616] (-) TimerEvent: {}
+[43.351189] (-) TimerEvent: {}
+[43.452272] (-) TimerEvent: {}
+[43.553519] (-) TimerEvent: {}
+[43.654378] (-) TimerEvent: {}
+[43.754911] (-) TimerEvent: {}
+[43.855958] (-) TimerEvent: {}
+[43.957322] (-) TimerEvent: {}
+[44.059006] (-) TimerEvent: {}
+[44.159585] (-) TimerEvent: {}
+[44.260256] (-) TimerEvent: {}
+[44.361036] (-) TimerEvent: {}
+[44.461698] (-) TimerEvent: {}
+[44.562515] (-) TimerEvent: {}
+[44.663172] (-) TimerEvent: {}
+[45.004032] (-) TimerEvent: {}
+[45.105700] (-) TimerEvent: {}
+[45.555906] (-) TimerEvent: {}
+[46.098469] (-) TimerEvent: {}
+[46.199622] (-) TimerEvent: {}
+[46.301138] (-) TimerEvent: {}
+[46.401794] (-) TimerEvent: {}
+[46.502446] (-) TimerEvent: {}
+[46.603360] (-) TimerEvent: {}
+[46.703745] (-) TimerEvent: {}
+[46.804232] (-) TimerEvent: {}
+[46.904655] (-) TimerEvent: {}
+[47.005096] (-) TimerEvent: {}
+[47.105790] (-) TimerEvent: {}
+[47.206226] (-) TimerEvent: {}
+[47.306743] (-) TimerEvent: {}
+[47.407177] (-) TimerEvent: {}
+[47.507556] (-) TimerEvent: {}
+[47.608003] (-) TimerEvent: {}
+[47.708550] (-) TimerEvent: {}
+[47.809082] (-) TimerEvent: {}
+[47.909551] (-) TimerEvent: {}
+[48.010005] (-) TimerEvent: {}
+[48.110389] (-) TimerEvent: {}
+[48.210763] (-) TimerEvent: {}
+[48.311213] (-) TimerEvent: {}
+[48.411618] (-) TimerEvent: {}
+[48.512129] (-) TimerEvent: {}
+[48.612589] (-) TimerEvent: {}
+[48.712948] (-) TimerEvent: {}
+[48.813352] (-) TimerEvent: {}
+[48.913760] (-) TimerEvent: {}
+[49.014270] (-) TimerEvent: {}
+[49.114770] (-) TimerEvent: {}
+[49.215209] (-) TimerEvent: {}
+[49.315669] (-) TimerEvent: {}
+[49.416144] (-) TimerEvent: {}
+[49.516694] (-) TimerEvent: {}
+[49.617152] (-) TimerEvent: {}
+[49.717645] (-) TimerEvent: {}
+[49.818311] (-) TimerEvent: {}
+[49.918906] (-) TimerEvent: {}
+[50.019481] (-) TimerEvent: {}
+[50.120148] (-) TimerEvent: {}
+[50.220640] (-) TimerEvent: {}
+[50.321079] (-) TimerEvent: {}
+[50.421564] (-) TimerEvent: {}
+[50.522024] (-) TimerEvent: {}
+[50.622523] (-) TimerEvent: {}
+[50.722977] (-) TimerEvent: {}
+[50.823457] (-) TimerEvent: {}
+[50.924197] (-) TimerEvent: {}
+[51.024637] (-) TimerEvent: {}
+[51.125221] (-) TimerEvent: {}
+[51.225617] (-) TimerEvent: {}
+[51.326022] (-) TimerEvent: {}
+[51.426446] (-) TimerEvent: {}
+[51.526869] (-) TimerEvent: {}
+[51.627333] (-) TimerEvent: {}
+[51.727898] (-) TimerEvent: {}
+[51.828364] (-) TimerEvent: {}
+[51.928842] (-) TimerEvent: {}
+[52.029345] (-) TimerEvent: {}
+[52.129836] (-) TimerEvent: {}
+[52.230313] (-) TimerEvent: {}
+[52.331072] (-) TimerEvent: {}
+[52.431571] (-) TimerEvent: {}
+[52.532256] (-) TimerEvent: {}
+[52.633028] (-) TimerEvent: {}
+[52.734153] (-) TimerEvent: {}
+[52.834666] (-) TimerEvent: {}
+[52.935295] (-) TimerEvent: {}
+[53.035853] (-) TimerEvent: {}
+[53.136378] (-) TimerEvent: {}
+[53.237058] (-) TimerEvent: {}
+[53.337553] (-) TimerEvent: {}
+[53.438046] (-) TimerEvent: {}
+[53.538579] (-) TimerEvent: {}
+[53.639074] (-) TimerEvent: {}
+[53.739696] (-) TimerEvent: {}
+[53.791556] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 83%] \x1b[32m\x1b[1mLinking CXX executable talker\x1b[0m\n'}
+[53.839904] (-) TimerEvent: {}
+[53.940460] (-) TimerEvent: {}
+[54.040963] (-) TimerEvent: {}
+[54.141530] (-) TimerEvent: {}
+[54.238212] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 83%] Built target talker\n'}
+[54.241684] (-) TimerEvent: {}
+[54.342160] (-) TimerEvent: {}
+[54.442647] (-) TimerEvent: {}
+[54.543124] (-) TimerEvent: {}
+[54.643583] (-) TimerEvent: {}
+[54.744157] (-) TimerEvent: {}
+[54.844653] (-) TimerEvent: {}
+[54.945123] (-) TimerEvent: {}
+[55.045626] (-) TimerEvent: {}
+[55.146126] (-) TimerEvent: {}
+[55.246648] (-) TimerEvent: {}
+[55.347187] (-) TimerEvent: {}
+[55.447645] (-) TimerEvent: {}
+[55.548156] (-) TimerEvent: {}
+[55.648626] (-) TimerEvent: {}
+[55.749094] (-) TimerEvent: {}
+[55.849544] (-) TimerEvent: {}
+[55.950016] (-) TimerEvent: {}
+[56.050510] (-) TimerEvent: {}
+[56.151018] (-) TimerEvent: {}
+[56.251658] (-) TimerEvent: {}
+[56.352350] (-) TimerEvent: {}
+[56.452839] (-) TimerEvent: {}
+[56.553294] (-) TimerEvent: {}
+[56.653742] (-) TimerEvent: {}
+[56.754467] (-) TimerEvent: {}
+[56.855553] (-) TimerEvent: {}
+[56.956874] (-) TimerEvent: {}
+[57.057707] (-) TimerEvent: {}
+[57.158967] (-) TimerEvent: {}
+[57.259752] (-) TimerEvent: {}
+[57.264707] (my_cpp_py_pkg) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable listener\x1b[0m\n'}
+[57.359876] (-) TimerEvent: {}
+[57.460418] (-) TimerEvent: {}
+[57.560946] (-) TimerEvent: {}
+[57.661460] (-) TimerEvent: {}
+[57.762004] (-) TimerEvent: {}
+[57.814115] (my_cpp_py_pkg) StdoutLine: {'line': b'[100%] Built target listener\n'}
+[57.862104] (-) TimerEvent: {}
+[57.962582] (-) TimerEvent: {}
+[58.063190] (-) TimerEvent: {}
+[58.067599] (my_cpp_py_pkg) CommandEnded: {'returncode': 0}
+[58.135020] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'install'}
+[58.154056] (my_cpp_py_pkg) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'], 'cwd': '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'emelie'), ('GIT_ASKPASS', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/home/emelie/ba_ws_com/install/turtlesim/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/emelie'), ('OLDPWD', '/home/emelie'), ('TERM_PROGRAM_VERSION', '1.103.2'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-cb40fea6-a8a0-4a81-b520-e3b824d18eeb.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/node'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-20.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/emelie/ba_ws_com/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'emelie'), ('NAME', 'Code'), ('WSL_INTEROP', '/run/WSL/2041_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/foxy/bin:/home/emelie/.vscode-server/bin/6f17636121051a53c88d3e605c491d22af2ba755/bin/remote-cli:/home/emelie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/WindowsApps/CanonicalGroupLimited.Ubuntu20.04LTS_2004.6.16.0_x64__79rhkp1fndgsc:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files/apache-maven-3.9.1/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Program Files/WireGuard/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/:/mnt/c/Users/Admin/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2023.1/bin:/mnt/c/Users/Admin/AppData/Local/Programs/Microsoft VS Code/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-33767168d4.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/emelie/ba_ws_com/install/turtlesim/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/opt/ros/foxy'), ('WSLENV', 'ELECTRON_RUN_AS_NODE/w:')]), 'shell': False}
+[58.300764] (-) TimerEvent: {}
+[58.309167] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[58.336642] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker\n'}
+[58.337714] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Set runtime path of "/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker" to ""\n'}
+[58.338643] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker\n'}
+[58.339157] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/listener\n'}
+[58.339670] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Set runtime path of "/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/listener" to ""\n'}
+[58.339842] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/my_cpp_node\n'}
+[58.339998] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/package_run_dependencies/my_cpp_py_pkg\n'}
+[58.340211] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/parent_prefix_path/my_cpp_py_pkg\n'}
+[58.340382] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.sh\n'}
+[58.340545] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.dsv\n'}
+[58.340727] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.sh\n'}
+[58.340895] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.dsv\n'}
+[58.341067] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.bash\n'}
+[58.341216] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.sh\n'}
+[58.341348] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.zsh\n'}
+[58.341479] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.dsv\n'}
+[58.341608] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.dsv\n'}
+[58.341737] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/packages/my_cpp_py_pkg\n'}
+[58.341866] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig.cmake\n'}
+[58.342053] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig-version.cmake\n'}
+[58.342223] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.xml\n'}
+[58.342420] (my_cpp_py_pkg) CommandEnded: {'returncode': 0}
+[58.400913] (-) TimerEvent: {}
+[58.451443] (my_cpp_py_pkg) JobEnded: {'identifier': 'my_cpp_py_pkg', 'rc': 0}
+[58.453778] (-) EventReactorShutdown: {}

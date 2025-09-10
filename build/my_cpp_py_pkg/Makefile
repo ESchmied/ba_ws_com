@@ -80,6 +80,28 @@ install/local/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
+	/usr/bin/ctest --force-new-ctest-process $(ARGS)
+.PHONY : test
+
+# Special rule for the target test
+test/fast: test
+
+.PHONY : test/fast
+
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
@@ -112,28 +134,6 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
-# Special rule for the target test
-test:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running tests..."
-	/usr/bin/ctest --force-new-ctest-process $(ARGS)
-.PHONY : test
-
-# Special rule for the target test
-test/fast: test
-
-.PHONY : test/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -179,6 +179,32 @@ my_cpp_node: cmake_check_build_system
 my_cpp_node/fast:
 	$(MAKE) -f CMakeFiles/my_cpp_node.dir/build.make CMakeFiles/my_cpp_node.dir/build
 .PHONY : my_cpp_node/fast
+
+#=============================================================================
+# Target rules for targets named listener
+
+# Build rule for target.
+listener: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 listener
+.PHONY : listener
+
+# fast build rule for target.
+listener/fast:
+	$(MAKE) -f CMakeFiles/listener.dir/build.make CMakeFiles/listener.dir/build
+.PHONY : listener/fast
+
+#=============================================================================
+# Target rules for targets named talker
+
+# Build rule for target.
+talker: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 talker
+.PHONY : talker
+
+# fast build rule for target.
+talker/fast:
+	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/build
+.PHONY : talker/fast
 
 #=============================================================================
 # Target rules for targets named my_cpp_py_pkg_uninstall
@@ -233,6 +259,60 @@ src/my_cpp_node.cpp.s:
 	$(MAKE) -f CMakeFiles/my_cpp_node.dir/build.make CMakeFiles/my_cpp_node.dir/src/my_cpp_node.cpp.s
 .PHONY : src/my_cpp_node.cpp.s
 
+src/publisher_member_function.o: src/publisher_member_function.cpp.o
+
+.PHONY : src/publisher_member_function.o
+
+# target to build an object file
+src/publisher_member_function.cpp.o:
+	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/src/publisher_member_function.cpp.o
+.PHONY : src/publisher_member_function.cpp.o
+
+src/publisher_member_function.i: src/publisher_member_function.cpp.i
+
+.PHONY : src/publisher_member_function.i
+
+# target to preprocess a source file
+src/publisher_member_function.cpp.i:
+	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/src/publisher_member_function.cpp.i
+.PHONY : src/publisher_member_function.cpp.i
+
+src/publisher_member_function.s: src/publisher_member_function.cpp.s
+
+.PHONY : src/publisher_member_function.s
+
+# target to generate assembly for a file
+src/publisher_member_function.cpp.s:
+	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/src/publisher_member_function.cpp.s
+.PHONY : src/publisher_member_function.cpp.s
+
+src/subscriber_member_function.o: src/subscriber_member_function.cpp.o
+
+.PHONY : src/subscriber_member_function.o
+
+# target to build an object file
+src/subscriber_member_function.cpp.o:
+	$(MAKE) -f CMakeFiles/listener.dir/build.make CMakeFiles/listener.dir/src/subscriber_member_function.cpp.o
+.PHONY : src/subscriber_member_function.cpp.o
+
+src/subscriber_member_function.i: src/subscriber_member_function.cpp.i
+
+.PHONY : src/subscriber_member_function.i
+
+# target to preprocess a source file
+src/subscriber_member_function.cpp.i:
+	$(MAKE) -f CMakeFiles/listener.dir/build.make CMakeFiles/listener.dir/src/subscriber_member_function.cpp.i
+.PHONY : src/subscriber_member_function.cpp.i
+
+src/subscriber_member_function.s: src/subscriber_member_function.cpp.s
+
+.PHONY : src/subscriber_member_function.s
+
+# target to generate assembly for a file
+src/subscriber_member_function.cpp.s:
+	$(MAKE) -f CMakeFiles/listener.dir/build.make CMakeFiles/listener.dir/src/subscriber_member_function.cpp.s
+.PHONY : src/subscriber_member_function.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -241,17 +321,25 @@ help:
 	@echo "... depend"
 	@echo "... install/strip"
 	@echo "... install/local"
-	@echo "... install"
-	@echo "... list_install_components"
-	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... test"
 	@echo "... my_cpp_node"
+	@echo "... install"
+	@echo "... list_install_components"
+	@echo "... rebuild_cache"
+	@echo "... listener"
+	@echo "... talker"
 	@echo "... my_cpp_py_pkg_uninstall"
 	@echo "... uninstall"
 	@echo "... src/my_cpp_node.o"
 	@echo "... src/my_cpp_node.i"
 	@echo "... src/my_cpp_node.s"
+	@echo "... src/publisher_member_function.o"
+	@echo "... src/publisher_member_function.i"
+	@echo "... src/publisher_member_function.s"
+	@echo "... src/subscriber_member_function.o"
+	@echo "... src/subscriber_member_function.i"
+	@echo "... src/subscriber_member_function.s"
 .PHONY : help
 
 

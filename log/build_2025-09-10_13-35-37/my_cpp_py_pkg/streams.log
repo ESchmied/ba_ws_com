@@ -1,0 +1,50 @@
+[0.042s] Invoking command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4
+[0.235s] -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+[0.295s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.607s] -- Found rclcpp: 2.4.3 (/opt/ros/foxy/share/rclcpp/cmake)
+[0.864s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.881s] -- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+[4.659s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[4.807s] -- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)
+[4.816s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[5.174s] -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
+[5.308s] -- Added test 'copyright' to check source files copyright and LICENSE
+[5.311s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[5.312s] -- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/emelie/ba_ws_com/src/my_cpp_py_pkg/include>
+[5.312s] -- Configured cppcheck exclude dirs and/or files: 
+[5.315s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[5.315s] -- Configured cpplint exclude dirs and/or files: 
+[5.317s] -- Added test 'lint_cmake' to check CMake code style
+[5.320s] -- Added test 'uncrustify' to check C / C++ code style
+[5.320s] -- Configured uncrustify additional arguments: 
+[5.321s] -- Added test 'xmllint' to check XML markup files
+[5.329s] -- Configuring done
+[5.368s] -- Generating done
+[5.372s] -- Build files have been written to: /home/emelie/ba_ws_com/build/my_cpp_py_pkg
+[5.419s] [35m[1mScanning dependencies of target talker[0m
+[5.441s] [ 50%] Built target my_cpp_node
+[5.753s] [ 75%] [32mBuilding CXX object CMakeFiles/talker.dir/src/publisher_member_function.cpp.o[0m
+[15.035s] [100%] [32m[1mLinking CXX executable talker[0m
+[15.547s] [100%] Built target talker
+[15.566s] Invoked command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4
+[15.631s] Invoking command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/my_cpp_py_pkg
+[15.644s] -- Install configuration: ""
+[15.644s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker
+[15.646s] -- Set runtime path of "/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker" to ""
+[15.647s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/my_cpp_node
+[15.648s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/package_run_dependencies/my_cpp_py_pkg
+[15.648s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/parent_prefix_path/my_cpp_py_pkg
+[15.649s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.sh
+[15.649s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.dsv
+[15.650s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.sh
+[15.650s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.dsv
+[15.650s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.bash
+[15.651s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.sh
+[15.651s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.zsh
+[15.651s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.dsv
+[15.651s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.dsv
+[15.652s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/packages/my_cpp_py_pkg
+[15.652s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig.cmake
+[15.652s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig-version.cmake
+[15.652s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.xml
+[15.657s] Invoked command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/my_cpp_py_pkg
