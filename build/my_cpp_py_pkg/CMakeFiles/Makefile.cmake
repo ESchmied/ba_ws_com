@@ -568,6 +568,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/my_cpp_node.dir/DependInfo.cmake"
+  "CMakeFiles/pure_pursuit.dir/DependInfo.cmake"
   "CMakeFiles/listener.dir/DependInfo.cmake"
   "CMakeFiles/talker.dir/DependInfo.cmake"
   "CMakeFiles/my_cpp_py_pkg_uninstall.dir/DependInfo.cmake"

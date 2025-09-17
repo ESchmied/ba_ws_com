@@ -181,6 +181,19 @@ my_cpp_node/fast:
 .PHONY : my_cpp_node/fast
 
 #=============================================================================
+# Target rules for targets named pure_pursuit
+
+# Build rule for target.
+pure_pursuit: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 pure_pursuit
+.PHONY : pure_pursuit
+
+# fast build rule for target.
+pure_pursuit/fast:
+	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/build
+.PHONY : pure_pursuit/fast
+
+#=============================================================================
 # Target rules for targets named listener
 
 # Build rule for target.
@@ -286,6 +299,33 @@ src/publisher_member_function.cpp.s:
 	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/src/publisher_member_function.cpp.s
 .PHONY : src/publisher_member_function.cpp.s
 
+src/pure_pursuit.o: src/pure_pursuit.cpp.o
+
+.PHONY : src/pure_pursuit.o
+
+# target to build an object file
+src/pure_pursuit.cpp.o:
+	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o
+.PHONY : src/pure_pursuit.cpp.o
+
+src/pure_pursuit.i: src/pure_pursuit.cpp.i
+
+.PHONY : src/pure_pursuit.i
+
+# target to preprocess a source file
+src/pure_pursuit.cpp.i:
+	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.i
+.PHONY : src/pure_pursuit.cpp.i
+
+src/pure_pursuit.s: src/pure_pursuit.cpp.s
+
+.PHONY : src/pure_pursuit.s
+
+# target to generate assembly for a file
+src/pure_pursuit.cpp.s:
+	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.s
+.PHONY : src/pure_pursuit.cpp.s
+
 src/subscriber_member_function.o: src/subscriber_member_function.cpp.o
 
 .PHONY : src/subscriber_member_function.o
@@ -321,9 +361,10 @@ help:
 	@echo "... depend"
 	@echo "... install/strip"
 	@echo "... install/local"
+	@echo "... my_cpp_node"
 	@echo "... edit_cache"
 	@echo "... test"
-	@echo "... my_cpp_node"
+	@echo "... pure_pursuit"
 	@echo "... install"
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
@@ -337,6 +378,9 @@ help:
 	@echo "... src/publisher_member_function.o"
 	@echo "... src/publisher_member_function.i"
 	@echo "... src/publisher_member_function.s"
+	@echo "... src/pure_pursuit.o"
+	@echo "... src/pure_pursuit.i"
+	@echo "... src/pure_pursuit.s"
 	@echo "... src/subscriber_member_function.o"
 	@echo "... src/subscriber_member_function.i"
 	@echo "... src/subscriber_member_function.s"

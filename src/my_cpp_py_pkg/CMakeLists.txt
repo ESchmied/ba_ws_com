@@ -28,10 +28,15 @@ ament_target_dependencies(talker rclcpp std_msgs)
 add_executable(listener src/subscriber_member_function.cpp)
 ament_target_dependencies(listener rclcpp std_msgs)
 
+add_executable(pure_pursuit src/pure_pursuit.cpp)
+ament_target_dependencies(pure_pursuit rclcpp std_msgs)
+
 install (TARGETS 
   talker
   listener
-  DESTINATION lib/${PROJECT_NAME})
+  pure_pursuit
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 
 add_executable(my_cpp_node src/my_cpp_node.cpp)
