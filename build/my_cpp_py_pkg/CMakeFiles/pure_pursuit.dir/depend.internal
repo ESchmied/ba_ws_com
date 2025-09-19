@@ -325,12 +325,6 @@ CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o
  /opt/ros/foxy/include/std_msgs/msg/detail/color_rgba__traits.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
  /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
- /opt/ros/foxy/include/std_msgs/msg/detail/string__builder.hpp
- /opt/ros/foxy/include/std_msgs/msg/detail/string__struct.hpp
- /opt/ros/foxy/include/std_msgs/msg/detail/string__traits.hpp
- /opt/ros/foxy/include/std_msgs/msg/detail/string__type_support.hpp
- /opt/ros/foxy/include/std_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
- /opt/ros/foxy/include/std_msgs/msg/string.hpp
  /opt/ros/foxy/include/tf2/LinearMath/Matrix3x3.h
  /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
  /opt/ros/foxy/include/tf2/LinearMath/QuadWord.h

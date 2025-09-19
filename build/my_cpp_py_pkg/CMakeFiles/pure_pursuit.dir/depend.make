@@ -324,12 +324,6 @@ CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_ms
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/color_rgba__traits.hpp
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/header__struct.hpp
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/header__traits.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/string__builder.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/string__struct.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/string__traits.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/detail/string__type_support.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
-CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/std_msgs/msg/string.hpp
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/tf2/LinearMath/Matrix3x3.h
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/tf2/LinearMath/MinMax.h
 CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o: /opt/ros/foxy/include/tf2/LinearMath/QuadWord.h

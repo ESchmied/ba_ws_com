@@ -1,0 +1,199 @@
+[0.000000] (-) TimerEvent: {}
+[0.000354] (my_cpp_py_pkg) JobQueued: {'identifier': 'my_cpp_py_pkg', 'dependencies': OrderedDict()}
+[0.000949] (my_cpp_py_pkg) JobStarted: {'identifier': 'my_cpp_py_pkg'}
+[0.026360] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'cmake'}
+[0.028324] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'build'}
+[0.029433] (my_cpp_py_pkg) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', '--', '-j4', '-l4'], 'cwd': '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'emelie'), ('GIT_ASKPASS', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/home/emelie/ba_ws_com/install/turtlesim/lib:/home/emelie/install/vesc_driver/lib:/home/emelie/install/vesc_ackermann/lib:/home/emelie/install/vesc_msgs/lib:/home/emelie/install/teleop_tools_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/emelie'), ('OLDPWD', '/home/emelie'), ('TERM_PROGRAM_VERSION', '1.104.1'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-13b22f5b-bf73-4b0d-9748-3b06d110d060.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/node'), ('VSCODE_PYTHON_AUTOACTIVATE_GUARD', '1'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-20.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/emelie/ba_ws_com/install:/home/emelie/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'emelie'), ('NAME', 'Code'), ('WSL_INTEROP', '/run/WSL/1581_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/bin/remote-cli:/opt/ros/foxy/bin:/home/emelie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/WindowsApps/CanonicalGroupLimited.Ubuntu20.04LTS_2004.6.16.0_x64__79rhkp1fndgsc:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files/apache-maven-3.9.1/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Program Files/WireGuard/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/:/mnt/c/Users/Admin/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2023.1/bin:/mnt/c/Users/Admin/AppData/Local/Programs/Microsoft VS Code/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-732395844a.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/home/emelie/install/f1tenth_stack:/home/emelie/install/vesc:/home/emelie/install/vesc_driver:/home/emelie/install/vesc_ackermann:/home/emelie/install/vesc_msgs:/home/emelie/install/teleop_tools:/home/emelie/install/joy_teleop:/home/emelie/install/teleop_tools_msgs:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/home/emelie/install/ackermann_mux:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/emelie/ba_ws_com/install/turtlesim/lib/python3.8/site-packages:/home/emelie/install/f1tenth_stack/lib/python3.8/site-packages:/home/emelie/install/vesc_msgs/lib/python3.8/site-packages:/home/emelie/install/joy_teleop/lib/python3.8/site-packages:/home/emelie/install/teleop_tools_msgs/lib/python3.8/site-packages:/home/emelie/install/mouse_teleop/lib/python3.8/site-packages:/home/emelie/install/key_teleop/lib/python3.8/site-packages:/home/emelie/install/f1tenth_gym_ros/lib/python3.8/site-packages:/home/emelie/install/f110_gym/lib/python3.8/site-packages:/home/emelie/install/ba_roslab/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/home/emelie/install/vesc:/home/emelie/install/vesc_driver:/home/emelie/install/vesc_ackermann:/home/emelie/install/vesc_msgs:/home/emelie/install/teleop_tools:/home/emelie/install/teleop_tools_msgs:/home/emelie/install/ackermann_mux:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy'), ('WSLENV', 'ELECTRON_RUN_AS_NODE/w:')]), 'shell': False}
+[0.099389] (-) TimerEvent: {}
+[0.183875] (my_cpp_py_pkg) StdoutLine: {'line': b'\x1b[35m\x1b[1mScanning dependencies of target pure_pursuit\x1b[0m\n'}
+[0.202693] (-) TimerEvent: {}
+[0.242530] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 25%] Built target my_cpp_node\n'}
+[0.263332] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 50%] Built target talker\n'}
+[0.275703] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 62%] \x1b[32mBuilding CXX object CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o\x1b[0m\n'}
+[0.277802] (my_cpp_py_pkg) StdoutLine: {'line': b'[ 87%] Built target listener\n'}
+[0.302826] (-) TimerEvent: {}
+[0.403335] (-) TimerEvent: {}
+[0.503977] (-) TimerEvent: {}
+[0.604625] (-) TimerEvent: {}
+[0.706268] (-) TimerEvent: {}
+[0.807000] (-) TimerEvent: {}
+[0.907584] (-) TimerEvent: {}
+[1.008995] (-) TimerEvent: {}
+[1.109766] (-) TimerEvent: {}
+[1.211101] (-) TimerEvent: {}
+[1.312024] (-) TimerEvent: {}
+[1.412737] (-) TimerEvent: {}
+[1.513437] (-) TimerEvent: {}
+[1.615081] (-) TimerEvent: {}
+[1.716750] (-) TimerEvent: {}
+[1.817501] (-) TimerEvent: {}
+[1.918143] (-) TimerEvent: {}
+[2.018768] (-) TimerEvent: {}
+[2.119467] (-) TimerEvent: {}
+[2.220089] (-) TimerEvent: {}
+[2.321151] (-) TimerEvent: {}
+[2.422386] (-) TimerEvent: {}
+[2.522859] (-) TimerEvent: {}
+[2.623435] (-) TimerEvent: {}
+[2.724059] (-) TimerEvent: {}
+[2.824580] (-) TimerEvent: {}
+[2.925120] (-) TimerEvent: {}
+[3.025682] (-) TimerEvent: {}
+[3.126370] (-) TimerEvent: {}
+[3.226856] (-) TimerEvent: {}
+[3.327430] (-) TimerEvent: {}
+[3.428292] (-) TimerEvent: {}
+[3.528883] (-) TimerEvent: {}
+[3.629419] (-) TimerEvent: {}
+[3.730008] (-) TimerEvent: {}
+[3.830456] (-) TimerEvent: {}
+[3.930967] (-) TimerEvent: {}
+[4.031587] (-) TimerEvent: {}
+[4.132202] (-) TimerEvent: {}
+[4.180036] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:\x1b[m\x1b[K In constructor \xe2\x80\x98\x1b[01m\x1b[KPure_Pursuit_Node::Pure_Pursuit_Node()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[4.180492] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:84:13:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kunused variable \xe2\x80\x98\x1b[01m\x1b[Ksize_x\x1b[m\x1b[K\xe2\x80\x99 [\x1b[01;35m\x1b[K-Wunused-variable\x1b[m\x1b[K]\n'}
+[4.180768] (my_cpp_py_pkg) StderrLine: {'line': b'   84 |         int \x1b[01;35m\x1b[Ksize_x\x1b[m\x1b[K = str_x.length();\n'}
+[4.180934] (my_cpp_py_pkg) StderrLine: {'line': b'      |             \x1b[01;35m\x1b[K^~~~~~\x1b[m\x1b[K\n'}
+[4.232374] (-) TimerEvent: {}
+[4.239645] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kint Pure_Pursuit_Node::find_next_waypoint(int, std::tuple<float, float>, std::vector<std::tuple<double, double> >)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[4.240080] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:167:21:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kcomparison of integer expressions of different signedness: \xe2\x80\x98\x1b[01m\x1b[Kint\x1b[m\x1b[K\xe2\x80\x99 and \xe2\x80\x98\x1b[01m\x1b[Kstd::vector<std::tuple<double, double> >::size_type\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Klong unsigned int\x1b[m\x1b[K\xe2\x80\x99} [\x1b[01;35m\x1b[K-Wsign-compare\x1b[m\x1b[K]\n'}
+[4.240263] (my_cpp_py_pkg) StderrLine: {'line': b'  167 |     if(\x1b[01;35m\x1b[Knew_waypoint == path_points_2d.size()\x1b[m\x1b[K){\n'}
+[4.240404] (my_cpp_py_pkg) StderrLine: {'line': b'      |        \x1b[01;35m\x1b[K~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[4.302715] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid Pure_Pursuit_Node::odom_callback(nav_msgs::msg::Odometry_<std::allocator<void> >::SharedPtr)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[4.303185] (my_cpp_py_pkg) StderrLine: {'line': b'\x1b[01m\x1b[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:279:27:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kvariable \xe2\x80\x98\x1b[01m\x1b[Ktransformed_waypoint\x1b[m\x1b[K\xe2\x80\x99 set but not used [\x1b[01;35m\x1b[K-Wunused-but-set-variable\x1b[m\x1b[K]\n'}
+[4.303452] (my_cpp_py_pkg) StderrLine: {'line': b'  279 |     tuple<double, double> \x1b[01;35m\x1b[Ktransformed_waypoint\x1b[m\x1b[K = transform_waypoint(nearest_waypoint, car_position_2d, car_orientation);\n'}
+[4.303816] (my_cpp_py_pkg) StderrLine: {'line': b'      |                           \x1b[01;35m\x1b[K^~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[4.332571] (-) TimerEvent: {}
+[4.433252] (-) TimerEvent: {}
+[4.533895] (-) TimerEvent: {}
+[4.646570] (-) TimerEvent: {}
+[4.747054] (-) TimerEvent: {}
+[4.847669] (-) TimerEvent: {}
+[4.948279] (-) TimerEvent: {}
+[5.048887] (-) TimerEvent: {}
+[5.149490] (-) TimerEvent: {}
+[5.250053] (-) TimerEvent: {}
+[5.350633] (-) TimerEvent: {}
+[5.451196] (-) TimerEvent: {}
+[5.554449] (-) TimerEvent: {}
+[5.654974] (-) TimerEvent: {}
+[5.755607] (-) TimerEvent: {}
+[5.856275] (-) TimerEvent: {}
+[5.956947] (-) TimerEvent: {}
+[6.057531] (-) TimerEvent: {}
+[6.158224] (-) TimerEvent: {}
+[6.258846] (-) TimerEvent: {}
+[6.359383] (-) TimerEvent: {}
+[6.459900] (-) TimerEvent: {}
+[6.560519] (-) TimerEvent: {}
+[6.661118] (-) TimerEvent: {}
+[6.761717] (-) TimerEvent: {}
+[6.862258] (-) TimerEvent: {}
+[6.962781] (-) TimerEvent: {}
+[7.063298] (-) TimerEvent: {}
+[7.163808] (-) TimerEvent: {}
+[7.264275] (-) TimerEvent: {}
+[7.364824] (-) TimerEvent: {}
+[7.465327] (-) TimerEvent: {}
+[7.565759] (-) TimerEvent: {}
+[7.666237] (-) TimerEvent: {}
+[7.766712] (-) TimerEvent: {}
+[7.867318] (-) TimerEvent: {}
+[7.967792] (-) TimerEvent: {}
+[8.068261] (-) TimerEvent: {}
+[8.168761] (-) TimerEvent: {}
+[8.269247] (-) TimerEvent: {}
+[8.369772] (-) TimerEvent: {}
+[8.470364] (-) TimerEvent: {}
+[8.570899] (-) TimerEvent: {}
+[8.671411] (-) TimerEvent: {}
+[8.771851] (-) TimerEvent: {}
+[8.872379] (-) TimerEvent: {}
+[8.972827] (-) TimerEvent: {}
+[9.073339] (-) TimerEvent: {}
+[9.173849] (-) TimerEvent: {}
+[9.274374] (-) TimerEvent: {}
+[9.374933] (-) TimerEvent: {}
+[9.475442] (-) TimerEvent: {}
+[9.576089] (-) TimerEvent: {}
+[9.676618] (-) TimerEvent: {}
+[9.777159] (-) TimerEvent: {}
+[9.877668] (-) TimerEvent: {}
+[9.978163] (-) TimerEvent: {}
+[10.078682] (-) TimerEvent: {}
+[10.179153] (-) TimerEvent: {}
+[10.327859] (-) TimerEvent: {}
+[10.428607] (-) TimerEvent: {}
+[10.529044] (-) TimerEvent: {}
+[10.629525] (-) TimerEvent: {}
+[10.729982] (-) TimerEvent: {}
+[10.830500] (-) TimerEvent: {}
+[10.930971] (-) TimerEvent: {}
+[11.031540] (-) TimerEvent: {}
+[11.131942] (-) TimerEvent: {}
+[11.232387] (-) TimerEvent: {}
+[11.332879] (-) TimerEvent: {}
+[11.433338] (-) TimerEvent: {}
+[11.533968] (-) TimerEvent: {}
+[11.634532] (-) TimerEvent: {}
+[11.734994] (-) TimerEvent: {}
+[11.835504] (-) TimerEvent: {}
+[11.935982] (-) TimerEvent: {}
+[12.036576] (-) TimerEvent: {}
+[12.137263] (-) TimerEvent: {}
+[12.237902] (-) TimerEvent: {}
+[12.338617] (-) TimerEvent: {}
+[12.439393] (-) TimerEvent: {}
+[12.539840] (-) TimerEvent: {}
+[12.640297] (-) TimerEvent: {}
+[12.740772] (-) TimerEvent: {}
+[12.841345] (-) TimerEvent: {}
+[12.942514] (-) TimerEvent: {}
+[13.043022] (-) TimerEvent: {}
+[13.143555] (-) TimerEvent: {}
+[13.223247] (my_cpp_py_pkg) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable pure_pursuit\x1b[0m\n'}
+[13.243706] (-) TimerEvent: {}
+[13.344193] (-) TimerEvent: {}
+[13.444707] (-) TimerEvent: {}
+[13.545344] (-) TimerEvent: {}
+[13.646009] (-) TimerEvent: {}
+[13.746659] (-) TimerEvent: {}
+[13.847289] (-) TimerEvent: {}
+[13.947917] (-) TimerEvent: {}
+[14.048438] (-) TimerEvent: {}
+[14.149018] (-) TimerEvent: {}
+[14.249724] (-) TimerEvent: {}
+[14.265447] (my_cpp_py_pkg) StdoutLine: {'line': b'[100%] Built target pure_pursuit\n'}
+[14.295174] (my_cpp_py_pkg) CommandEnded: {'returncode': 0}
+[14.350167] (-) TimerEvent: {}
+[14.388919] (my_cpp_py_pkg) JobProgress: {'identifier': 'my_cpp_py_pkg', 'progress': 'install'}
+[14.420171] (my_cpp_py_pkg) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'], 'cwd': '/home/emelie/ba_ws_com/build/my_cpp_py_pkg', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'emelie'), ('GIT_ASKPASS', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/home/emelie/ba_ws_com/install/turtlesim/lib:/home/emelie/install/vesc_driver/lib:/home/emelie/install/vesc_ackermann/lib:/home/emelie/install/vesc_msgs/lib:/home/emelie/install/teleop_tools_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib'), ('MOTD_SHOWN', 'update-motd'), ('HOME', '/home/emelie'), ('OLDPWD', '/home/emelie'), ('TERM_PROGRAM_VERSION', '1.104.1'), ('VSCODE_IPC_HOOK_CLI', '/run/user/1000/vscode-ipc-13b22f5b-bf73-4b0d-9748-3b06d110d060.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/node'), ('VSCODE_PYTHON_AUTOACTIVATE_GUARD', '1'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('WSL_DISTRO_NAME', 'Ubuntu-20.04'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/emelie/ba_ws_com/install:/home/emelie/install'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'emelie'), ('NAME', 'Code'), ('WSL_INTEROP', '/run/WSL/1581_interop'), ('PULSE_SERVER', 'unix:/mnt/wslg/PulseServer'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/home/emelie/.vscode-server/bin/0f0d87fa9e96c856c5212fc86db137ac0d783365/bin/remote-cli:/opt/ros/foxy/bin:/home/emelie/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/WindowsApps/CanonicalGroupLimited.Ubuntu20.04LTS_2004.6.16.0_x64__79rhkp1fndgsc:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files/Intel/WiFi/bin/:/mnt/c/Program Files/Common Files/Intel/WirelessCommon/:/mnt/c/Program Files/apache-maven-3.9.1/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Program Files/WireGuard/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/Scripts/:/mnt/c/Users/Admin/AppData/Local/Programs/Python/Python312/:/mnt/c/Users/Admin/AppData/Local/Microsoft/WindowsApps:/mnt/c/Program Files/JetBrains/IntelliJ IDEA Community Edition 2023.1/bin:/mnt/c/Users/Admin/AppData/Local/Programs/Microsoft VS Code/bin:/snap/bin'), ('XDG_RUNTIME_DIR', '/run/user/1000/'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-732395844a.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/home/emelie/install/f1tenth_stack:/home/emelie/install/vesc:/home/emelie/install/vesc_driver:/home/emelie/install/vesc_ackermann:/home/emelie/install/vesc_msgs:/home/emelie/install/teleop_tools:/home/emelie/install/joy_teleop:/home/emelie/install/teleop_tools_msgs:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/home/emelie/install/ackermann_mux:/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/home/emelie/ba_ws_com/build/my_cpp_py_pkg'), ('XDG_DATA_DIRS', '/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/emelie/ba_ws_com/install/turtlesim/lib/python3.8/site-packages:/home/emelie/install/f1tenth_stack/lib/python3.8/site-packages:/home/emelie/install/vesc_msgs/lib/python3.8/site-packages:/home/emelie/install/joy_teleop/lib/python3.8/site-packages:/home/emelie/install/teleop_tools_msgs/lib/python3.8/site-packages:/home/emelie/install/mouse_teleop/lib/python3.8/site-packages:/home/emelie/install/key_teleop/lib/python3.8/site-packages:/home/emelie/install/f1tenth_gym_ros/lib/python3.8/site-packages:/home/emelie/install/f110_gym/lib/python3.8/site-packages:/home/emelie/install/ba_roslab/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages'), ('COLCON', '1'), ('WSL2_GUI_APPS_ENABLED', '1'), ('HOSTTYPE', 'x86_64'), ('CMAKE_PREFIX_PATH', '/home/emelie/ba_ws_com/install/turtlesim:/home/emelie/ba_ws_com/install/my_cpp_py_pkg:/home/emelie/install/vesc:/home/emelie/install/vesc_driver:/home/emelie/install/vesc_ackermann:/home/emelie/install/vesc_msgs:/home/emelie/install/teleop_tools:/home/emelie/install/teleop_tools_msgs:/home/emelie/install/ackermann_mux:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy'), ('WSLENV', 'ELECTRON_RUN_AS_NODE/w:')]), 'shell': False}
+[14.450667] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[14.451551] (-) TimerEvent: {}
+[14.454574] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker\n'}
+[14.454962] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/listener\n'}
+[14.457603] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/pure_pursuit\n'}
+[14.471360] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Set runtime path of "/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/pure_pursuit" to ""\n'}
+[14.471995] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/my_cpp_node\n'}
+[14.472541] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/package_run_dependencies/my_cpp_py_pkg\n'}
+[14.472860] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/parent_prefix_path/my_cpp_py_pkg\n'}
+[14.473401] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.sh\n'}
+[14.473617] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.dsv\n'}
+[14.473758] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.sh\n'}
+[14.473902] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.dsv\n'}
+[14.476346] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.bash\n'}
+[14.480192] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.sh\n'}
+[14.481863] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.zsh\n'}
+[14.490711] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.dsv\n'}
+[14.491751] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.dsv\n'}
+[14.492087] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/packages/my_cpp_py_pkg\n'}
+[14.492343] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig.cmake\n'}
+[14.492597] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig-version.cmake\n'}
+[14.492901] (my_cpp_py_pkg) StdoutLine: {'line': b'-- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.xml\n'}
+[14.495281] (my_cpp_py_pkg) CommandEnded: {'returncode': 0}
+[14.557073] (-) TimerEvent: {}
+[14.672427] (-) TimerEvent: {}
+[14.774089] (-) TimerEvent: {}
+[14.875610] (-) TimerEvent: {}
+[14.883256] (my_cpp_py_pkg) JobEnded: {'identifier': 'my_cpp_py_pkg', 'rc': 0}
+[14.896860] (-) EventReactorShutdown: {}

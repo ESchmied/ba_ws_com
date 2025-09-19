@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <chrono>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -21,16 +20,15 @@
 #include <fstream>
 #include <algorithm>
 
-
-#include "tf2/LinearMath/Matrix3x3.h"
-#include "tf2/LinearMath/Quaternion.h"
-
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "ackermann_msgs/msg/ackermann_drive_stamped.hpp"
+#include "tf2/LinearMath/Matrix3x3.h"
+#include "tf2/LinearMath/Quaternion.h"
+#include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
 
 using namespace std;
 //using namespace std::chrono_literals;
@@ -38,7 +36,7 @@ using std::placeholders::_1;
 
 const float LOOKAHEAD_DISTANCE = 1;
 const float VELOCITY = 2;
-const float MAX_STEERING_ANGLE = 0.4189;
+const float MAX_STEERING_ANGLE = 0.8;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
  * member function as a callback from the timer. */
@@ -51,7 +49,7 @@ public:
   bool go_drive;
 
   //sichergehen das der Vector zu beginn leer ist
-  std::vector<float> last_visited_waypoints;
+  std::vector<double> last_visited_waypoints;
 
   Pure_Pursuit_Node()
   : Node("Pure_Pursuit")
@@ -60,11 +58,11 @@ public:
     goal_marker_pub = this->create_publisher<visualization_msgs::msg::Marker>("current_goal_point", 10);
     drive_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
 
-    odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this) );
+    odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this, std::placeholders::_1));
     
     last_visited_waypoints.clear();
 
-    string file_name = "/home/emelie/ba_ws/src/ba_roslab/ba_roslab/map/Spielberg_map_klein_race_line.csv";
+    string file_name = "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv";
     ifstream Raceline_CSV;
     Raceline_CSV.open(file_name);
 
@@ -73,14 +71,23 @@ public:
     tuple<double, double> point;
   
     while (getline(Raceline_CSV, line)){
+      //RCLCPP_INFO(this->get_logger(), "line= %s", line.c_str());
     //Todo
       if(line.empty()){
         continue;
       }
       else{
         stringstream stream_line;
+        stream_line << line;
         getline(stream_line, str_x, ',');
         getline(stream_line, str_y, ',');
+        int size_x = str_x.length();
+
+        //possible problem with the e+01 or e-01 for parsing
+        //printf("StrX=", str_x);
+        //RCLCPP_INFO(this->get_logger(), "STR_X= %s", str_x.c_str());
+        cout << str_x;
+        cout << str_y;
 
         double x = stod(str_x);
         double y = stod(str_y);
@@ -101,14 +108,14 @@ public:
 
   
 
-  tuple<double,double,double> euler_from_quaternion(float x, float y, float z, float w){
-    tuple<double, double, double> euler_angles;
-    tf2::Quaternion q;
-    q.setValue(x,y,z,w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    euler_angles= make_tuple(roll, pitch, yaw);
+  tuple<double,double,double> euler_from_quaternion(double x, double y, double z, double w){
+      tuple<double, double, double> euler_angles;
+      tf2::Quaternion q;
+      q.setValue(x,y,z,w);
+      tf2::Matrix3x3 m(q);
+      double roll, pitch, yaw;
+      m.getRPY(roll, pitch, yaw);
+      euler_angles= make_tuple(roll, pitch, yaw);
     return euler_angles;
   }
 
@@ -119,11 +126,11 @@ public:
   return distance;
   } 
 
-  float calc_turning_angle(tuple<double, double> car_position, tuple<double, double, double> car_orientation, tuple<double, double> nearest_waypoint){
-   float curvature;
+  double calc_turning_angle(tuple<double, double> car_position, tuple<double, double, double> car_orientation, tuple<double, double> nearest_waypoint){
+   double curvature;
    tuple<double, double> transformed_waypoint= transform_waypoint(nearest_waypoint, car_position, car_orientation);
    double y = get<1>(transformed_waypoint); 
-   float l = calc_euc_dist(car_position, nearest_waypoint);
+   double l = calc_euc_dist(car_position, nearest_waypoint);
    curvature= (2*y)/(l*l);
    curvature = atan(0.324 * curvature);  
 
@@ -149,7 +156,7 @@ public:
       return nearest_waypoint_index+1;
   } 
 
-  int find_next_waypoint(int current_waypoint, tuple<float, float> car_position, vector<tuple<double, double>> path_points_2d){
+  int find_next_waypoint(int current_waypoint, tuple<double, double> car_position, vector<tuple<double, double>> path_points_2d){
     int new_waypoint;
     if(calc_euc_dist(path_points_2d[current_waypoint], car_position)< LOOKAHEAD_DISTANCE){
       new_waypoint = current_waypoint + 1;
@@ -165,9 +172,9 @@ public:
     return new_waypoint;  
   }
 
-  tuple<double, double> transform_waypoint(tuple<double, double> waypoint, tuple<double, double> car_pos, tuple<float, float, float> car_orientation){
+  tuple<double, double> transform_waypoint(tuple<double, double> waypoint, tuple<double, double> car_pos, tuple<double, double, double> car_orientation){
     tuple<double, double> transformed_waypoint;
-    float theta = get<2>(car_orientation);
+    double theta = get<2>(car_orientation);
 
     get<0>(waypoint) = get<0>(waypoint) - get<0>(car_pos);
     get<1>(waypoint) = get<1>(waypoint) - get<1>(car_pos);
@@ -190,7 +197,7 @@ private:
 
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
 
-  void publish_single_point(float x, float y){
+  void publish_single_point(double x, double y){
     visualization_msgs::msg::Marker marker;
     marker.header.frame_id = "/map";
     marker.header.stamp = rclcpp::Clock().now();
@@ -256,11 +263,11 @@ private:
   
 
   //still todo
-  void odom_callback(const nav_msgs::msg::Odometry msg){
-    tuple<float, float> car_position_2d;
+  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg){
+    tuple<double, double> car_position_2d;
     tuple<double, double, double> car_orientation;
-    car_position_2d = make_tuple(msg.pose.pose.position.x, msg.pose.pose.position.y);
-    car_orientation= euler_from_quaternion(msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w );
+    car_position_2d = make_tuple(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    car_orientation= euler_from_quaternion(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w );
     
     if (nearest_waypoint_index ==-1){
       nearest_waypoint_index = find_nearest_waypoint(car_position_2d, path_points_2d);
@@ -272,8 +279,8 @@ private:
     tuple<double, double> nearest_waypoint = path_points_2d.at(nearest_waypoint_index);
     tuple<double, double> transformed_waypoint = transform_waypoint(nearest_waypoint, car_position_2d, car_orientation);
     
-    float turning_angle = calc_turning_angle(car_position_2d, car_orientation, nearest_waypoint);
-    float steering_angle;
+    double turning_angle = calc_turning_angle(car_position_2d, car_orientation, nearest_waypoint);
+    double steering_angle;
 
     if(turning_angle < - MAX_STEERING_ANGLE){
       steering_angle = - MAX_STEERING_ANGLE;
@@ -295,7 +302,7 @@ private:
       drive_pub->publish(drive_msg);
       //todo
       //add velocitiy and angle later
-      cout<<"driving";
+      //cout<<"driving";
 
       publish_single_point(get<0>(nearest_waypoint), get<1>(nearest_waypoint));
       //auch im Konstructor möglich?
