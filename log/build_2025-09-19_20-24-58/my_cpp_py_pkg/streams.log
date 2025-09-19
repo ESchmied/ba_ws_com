@@ -1,0 +1,44 @@
+[0.055s] Invoking command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4
+[0.241s] [35m[1mScanning dependencies of target pure_pursuit[0m
+[0.345s] [ 25%] Built target my_cpp_node
+[0.405s] [ 37%] [32mBuilding CXX object CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o[0m
+[0.574s] [ 62%] Built target listener
+[0.623s] [ 87%] Built target talker
+[3.781s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:[m[K In constructor ‘[01m[KPure_Pursuit_Node::Pure_Pursuit_Node()[m[K’:
+[3.781s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:86:13:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Ksize_x[m[K’ [[01;35m[K-Wunused-variable[m[K]
+[3.781s]    86 |         int [01;35m[Ksize_x[m[K = str_x.length();
+[3.781s]       |             [01;35m[K^~~~~~[m[K
+[3.798s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:[m[K In member function ‘[01m[Kint Pure_Pursuit_Node::find_nearest_waypoint(std::tuple<double, double>, std::vector<std::tuple<double, double> >)[m[K’:
+[3.798s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:148:5:[m[K [01;35m[Kwarning: [m[Kstatement has no effect [[01;35m[K-Wunused-value[m[K]
+[3.799s]   148 |     [01;35m[Knearest_waypoint_index[m[K;
+[3.799s]       |     [01;35m[K^~~~~~~~~~~~~~~~~~~~~~[m[K
+[3.800s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:[m[K In member function ‘[01m[Kint Pure_Pursuit_Node::find_next_waypoint(int, std::tuple<double, double>, std::vector<std::tuple<double, double> >)[m[K’:
+[3.801s] [01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:172:21:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<std::tuple<double, double> >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
+[3.801s]   172 |     if([01;35m[Knew_waypoint == path_points_2d.size()[m[K){
+[3.801s]       |        [01;35m[K~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[12.685s] [100%] [32m[1mLinking CXX executable pure_pursuit[0m
+[13.632s] [100%] Built target pure_pursuit
+[13.656s] Invoked command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/my_cpp_py_pkg -- -j4 -l4
+[13.769s] Invoking command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/my_cpp_py_pkg
+[13.784s] -- Install configuration: ""
+[13.785s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/talker
+[13.785s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/listener
+[13.786s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/pure_pursuit
+[13.795s] -- Set runtime path of "/home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/pure_pursuit" to ""
+[13.796s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/lib/my_cpp_py_pkg/my_cpp_node
+[13.796s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/package_run_dependencies/my_cpp_py_pkg
+[13.797s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/parent_prefix_path/my_cpp_py_pkg
+[13.798s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.sh
+[13.799s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/ament_prefix_path.dsv
+[13.799s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.sh
+[13.799s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/environment/path.dsv
+[13.799s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.bash
+[13.799s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.sh
+[13.800s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.zsh
+[13.800s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/local_setup.dsv
+[13.801s] -- Installing: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.dsv
+[13.801s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/ament_index/resource_index/packages/my_cpp_py_pkg
+[13.801s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig.cmake
+[13.801s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/cmake/my_cpp_py_pkgConfig-version.cmake
+[13.801s] -- Up-to-date: /home/emelie/ba_ws_com/install/my_cpp_py_pkg/share/my_cpp_py_pkg/package.xml
+[13.806s] Invoked command in '/home/emelie/ba_ws_com/build/my_cpp_py_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/emelie/install/f1tenth_stack:/home/emelie/install/joy_teleop:/home/emelie/install/mouse_teleop:/home/emelie/install/key_teleop:/home/emelie/install/f1tenth_gym_ros:/home/emelie/install/ba_roslab:/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/my_cpp_py_pkg

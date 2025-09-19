@@ -1,0 +1,6 @@
+[ 25%] Built target my_cpp_node
+[ 50%] Built target talker
+[ 75%] Built target listener
+[35m[1mScanning dependencies of target pure_pursuit[0m
+[ 87%] [32mBuilding CXX object CMakeFiles/pure_pursuit.dir/src/pure_pursuit.cpp.o[0m
+[100%] [32m[1mLinking CXX executable pure_pursuit[0m

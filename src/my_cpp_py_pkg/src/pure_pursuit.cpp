@@ -35,8 +35,8 @@ using namespace std;
 using std::placeholders::_1;
 
 const float LOOKAHEAD_DISTANCE = 1;
-const float VELOCITY = 2;
-const float MAX_STEERING_ANGLE = 0.8;
+const float VELOCITY = 1;
+const float MAX_STEERING_ANGLE = 0.4;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
  * member function as a callback from the timer. */
@@ -47,6 +47,7 @@ public:
   int nearest_waypoint_index;
   vector<tuple<double, double>> path_points_2d;
   bool go_drive;
+  double steering_angle;
 
   //sichergehen das der Vector zu beginn leer ist
   std::vector<double> last_visited_waypoints;
@@ -61,6 +62,7 @@ public:
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this, std::placeholders::_1));
     
     last_visited_waypoints.clear();
+    steering_angle = 0;
 
     string file_name = "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv";
     ifstream Raceline_CSV;
@@ -86,8 +88,8 @@ public:
         //possible problem with the e+01 or e-01 for parsing
         //printf("StrX=", str_x);
         //RCLCPP_INFO(this->get_logger(), "STR_X= %s", str_x.c_str());
-        cout << str_x;
-        cout << str_y;
+        //cout << str_x;
+        //cout << str_y;
 
         double x = stod(str_x);
         double y = stod(str_y);
@@ -96,10 +98,9 @@ public:
         path_points_2d.push_back(point);
       }
     }
+    //initialisierung damit noch kein index vorliegt
     nearest_waypoint_index = -1;
-    //might not be needed here
-    //publish_points();
-
+    
     char x;
     cout<< "Start car? [y/n]";
     cin>>x;
@@ -107,7 +108,8 @@ public:
   }
 
   
-
+//yaw is the relevant angle
+//in rad
   tuple<double,double,double> euler_from_quaternion(double x, double y, double z, double w){
       tuple<double, double, double> euler_angles;
       tf2::Quaternion q;
@@ -126,39 +128,41 @@ public:
   return distance;
   } 
 
-  double calc_turning_angle(tuple<double, double> car_position, tuple<double, double, double> car_orientation, tuple<double, double> nearest_waypoint){
+  double calc_turning_angle(tuple<double, double> car_position, tuple<double, double, double> car_orientation, tuple<double, double> next_waypoint){
    double curvature;
-   tuple<double, double> transformed_waypoint= transform_waypoint(nearest_waypoint, car_position, car_orientation);
-   double y = get<1>(transformed_waypoint); 
-   double l = calc_euc_dist(car_position, nearest_waypoint);
-   curvature= (2*y)/(l*l);
-   curvature = atan(0.324 * curvature);  
 
-   return curvature;
+   tuple<double, double> transformed_waypoint = transform_waypoint(next_waypoint, car_position, car_orientation);
+   double x = get<0>(transformed_waypoint); 
+   double l = calc_euc_dist(car_position, next_waypoint);
+   curvature= (2*x)/(l*l);
+   //woher kommt der atan? und woher die 0.324?
+   curvature = atan(0.324 * curvature); 
+
+   return -curvature;
   }
 
   int find_nearest_waypoint(tuple<double, double> car_position, vector<tuple<double, double>> path_points_2d){
     double smallest_dist = INFINITY;
     int index = 0;
     double dist;
-    int nearest_waypoint_index;
+    nearest_waypoint_index;
 
     for(tuple<double, double> way_point : path_points_2d){
-      index++;
-
+      
       dist = calc_euc_dist(car_position, way_point);
       if( dist<smallest_dist and dist>LOOKAHEAD_DISTANCE){
         smallest_dist = dist;
         nearest_waypoint_index = index;
       }
+      index++;
     }
-      //warum genau +1?
-      return nearest_waypoint_index+1;
+      //warum genau +1? damit der way point vor dem auto startet
+      return nearest_waypoint_index +1;
   } 
 
   int find_next_waypoint(int current_waypoint, tuple<double, double> car_position, vector<tuple<double, double>> path_points_2d){
     int new_waypoint;
-    if(calc_euc_dist(path_points_2d[current_waypoint], car_position)< LOOKAHEAD_DISTANCE){
+    if(calc_euc_dist(path_points_2d.at(current_waypoint), car_position) < LOOKAHEAD_DISTANCE){
       new_waypoint = current_waypoint + 1;
     }
     else{
@@ -174,16 +178,22 @@ public:
 
   tuple<double, double> transform_waypoint(tuple<double, double> waypoint, tuple<double, double> car_pos, tuple<double, double, double> car_orientation){
     tuple<double, double> transformed_waypoint;
+    tuple<double, double> waypoint_t;
+    tuple<double, double> waypoint_r;
+    
     double theta = get<2>(car_orientation);
 
-    get<0>(waypoint) = get<0>(waypoint) - get<0>(car_pos);
-    get<1>(waypoint) = get<1>(waypoint) - get<1>(car_pos);
+    get<0>(waypoint_t) = get<0>(waypoint) - get<0>(car_pos);
+    get<1>(waypoint_t) = get<1>(waypoint) - get<1>(car_pos);
 
-    get<0>(waypoint) = get<0>(waypoint)*cos(theta) - get<1>(waypoint)*sin(theta);
-    get<1>(waypoint) = -get<0>(waypoint)*sin(theta) + get<1>(waypoint)*cos(theta);
+    get<0>(waypoint_r) = get<0>(waypoint_t)*cos(theta) - get<1>(waypoint_t)*sin(theta);
+    get<1>(waypoint_r) = get<0>(waypoint_t)*sin(theta) + get<1>(waypoint_t)*cos(theta);
 
-    transformed_waypoint = waypoint;
-    return transformed_waypoint;
+    //woher kommt das minus
+    //get<1>(waypoint) = -get<0>(waypoint)*sin(theta) + get<1>(waypoint)*cos(theta);
+
+    //transformed_waypoint = waypoint_r;
+    return waypoint_r;
   }
 
 
@@ -276,14 +286,16 @@ private:
       nearest_waypoint_index = find_next_waypoint(nearest_waypoint_index, car_position_2d, path_points_2d);
     }
 
-    tuple<double, double> nearest_waypoint = path_points_2d.at(nearest_waypoint_index);
-    tuple<double, double> transformed_waypoint = transform_waypoint(nearest_waypoint, car_position_2d, car_orientation);
-    
-    double turning_angle = calc_turning_angle(car_position_2d, car_orientation, nearest_waypoint);
-    double steering_angle;
+    tuple<double, double> next_goalpoint = path_points_2d.at(nearest_waypoint_index);
+    //tuple<double, double> transformed_waypoint = transform_waypoint(nearest_waypoint, car_position_2d, car_orientation);
 
-    if(turning_angle < - MAX_STEERING_ANGLE){
-      steering_angle = - MAX_STEERING_ANGLE;
+    publish_points();
+    publish_single_point(get<0>(next_goalpoint), get<1>(next_goalpoint));
+    
+    double turning_angle = calc_turning_angle(car_position_2d, car_orientation, next_goalpoint);
+
+    if(turning_angle < -MAX_STEERING_ANGLE){
+      steering_angle = -MAX_STEERING_ANGLE;
     }
     else if (turning_angle > MAX_STEERING_ANGLE){
       steering_angle = MAX_STEERING_ANGLE;
@@ -291,6 +303,10 @@ private:
     else{
       steering_angle = turning_angle;
     }
+
+    cout<<"Steering_angle: " << steering_angle;
+
+
 
     if(go_drive){
       ackermann_msgs::msg::AckermannDriveStamped drive_msg;
@@ -304,10 +320,7 @@ private:
       //add velocitiy and angle later
       //cout<<"driving";
 
-      publish_single_point(get<0>(nearest_waypoint), get<1>(nearest_waypoint));
-      //auch im Konstructor möglich?
-      publish_points();
-
+      
     }
     
 
