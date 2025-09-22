@@ -35,8 +35,8 @@ using namespace std;
 using std::placeholders::_1;
 
 const float LOOKAHEAD_DISTANCE = 1;
-const float VELOCITY = 2;
-const float MAX_STEERING_ANGLE = 0.8;
+const float VELOCITY = 1.5;
+const float MAX_STEERING_ANGLE = 0.4;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
  * member function as a callback from the timer. */
@@ -86,8 +86,8 @@ public:
         //possible problem with the e+01 or e-01 for parsing
         //printf("StrX=", str_x);
         //RCLCPP_INFO(this->get_logger(), "STR_X= %s", str_x.c_str());
-        cout << str_x;
-        cout << str_y;
+        //cout << str_x;
+        //cout << str_y;
 
         double x = stod(str_x);
         double y = stod(str_y);
@@ -99,7 +99,7 @@ public:
     nearest_waypoint_index = -1;
     //might not be needed here
     //publish_points();
-
+    //cout << "test";
     char x;
     cout<< "Start car? [y/n]";
     cin>>x;
@@ -127,14 +127,14 @@ public:
   } 
 
   double calc_turning_angle(tuple<double, double> car_position, tuple<double, double, double> car_orientation, tuple<double, double> nearest_waypoint){
-   double curvature;
-   tuple<double, double> transformed_waypoint= transform_waypoint(nearest_waypoint, car_position, car_orientation);
-   double y = get<1>(transformed_waypoint); 
-   double l = calc_euc_dist(car_position, nearest_waypoint);
-   curvature= (2*y)/(l*l);
-   curvature = atan(0.324 * curvature);  
-
-   return curvature;
+    double curvature;
+    tuple<double, double> transformed_waypoint= transform_waypoint(nearest_waypoint, car_position, car_orientation);
+    double x_r = get<0>(transformed_waypoint); 
+    double l = calc_euc_dist(car_position, nearest_waypoint);
+    curvature= (2*x_r)/(l*l);
+    //curvature = atan(0.324 * curvature);  
+    //cout << "steering_angle:" << -curvature;
+    return -curvature;
   }
 
   int find_nearest_waypoint(tuple<double, double> car_position, vector<tuple<double, double>> path_points_2d){
@@ -144,15 +144,16 @@ public:
     int nearest_waypoint_index;
 
     for(tuple<double, double> way_point : path_points_2d){
-      index++;
-
+      
       dist = calc_euc_dist(car_position, way_point);
       if( dist<smallest_dist and dist>LOOKAHEAD_DISTANCE){
         smallest_dist = dist;
         nearest_waypoint_index = index;
       }
+      
+      index++;
     }
-      //warum genau +1?
+    //warum genau +1?
       return nearest_waypoint_index+1;
   } 
 
@@ -173,17 +174,22 @@ public:
   }
 
   tuple<double, double> transform_waypoint(tuple<double, double> waypoint, tuple<double, double> car_pos, tuple<double, double, double> car_orientation){
-    tuple<double, double> transformed_waypoint;
-    double theta = get<2>(car_orientation);
+    tuple<double, double> waypoint_r;
+    tuple<double, double> waypoint_t;
 
-    get<0>(waypoint) = get<0>(waypoint) - get<0>(car_pos);
-    get<1>(waypoint) = get<1>(waypoint) - get<1>(car_pos);
+    double theta = M_PI/2 - get<2>(car_orientation);
 
-    get<0>(waypoint) = get<0>(waypoint)*cos(theta) - get<1>(waypoint)*sin(theta);
-    get<1>(waypoint) = -get<0>(waypoint)*sin(theta) + get<1>(waypoint)*cos(theta);
+    //cout <<  "Theta:" << theta;
 
-    transformed_waypoint = waypoint;
-    return transformed_waypoint;
+    get<0>(waypoint_t) = get<0>(waypoint) - get<0>(car_pos);
+    get<1>(waypoint_t) = get<1>(waypoint) - get<1>(car_pos);
+
+    get<0>(waypoint_r) = get<0>(waypoint_t)*cos(theta) - get<1>(waypoint_t)*sin(theta);
+    get<1>(waypoint_r) = get<0>(waypoint_t)*sin(theta) + get<1>(waypoint_t)*cos(theta);
+
+    //cout << "  transformed_point= " << get<0>(waypoint_r) << " , " << get<1>(waypoint_r);
+
+    return waypoint_r;
   }
 
 
