@@ -153,7 +153,7 @@ public:
       
       index++;
     }
-    //warum genau +1?
+    //warum genau +1? damit es vor dem auto liegt
       return nearest_waypoint_index+1;
   } 
 

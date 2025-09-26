@@ -1,43 +1,494 @@
-#include <chrono>
-#include <memory>
-
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "ackermann_msgs/msg/ackermann_drive_stamped.hpp"
 
-using namespace std::chrono_literals;
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 
-/* This example creates a subclass of Node and uses std::bind() to register a
- * member function as a callback from the timer. */
+#include "visualization_msgs/msg/marker_array.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 
-class MPCControllerNode : public rclcpp::Node
-{
+extern "C" {
+#include "grampc.h"
+#include "time.h"
+#include "my_cpp_py_pkg/userparam.h"
+}
+
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <tuple>
+#include <cmath>
+#include <limits>
+#include <algorithm>
+
+using namespace std;
+
+// Waypoint file, adjust as needed 
+const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv";
+
+// Vehicle Parameters
+constexpr typeRNum L = 0.33;        // [m]
+constexpr typeRNum V_MAX = 2.0;     // [m/s]
+constexpr typeRNum M = 3.74;
+constexpr typeRNum LF = L/2;
+constexpr typeRNum LR = L/2;
+constexpr typeRNum C_AF = 4.718;
+constexpr typeRNum C_AR = 5.4562;
+constexpr typeRNum IZ = 0.04712;
+
+constexpr typeRNum YAW_MIN = -0.4;  // Steering angle
+constexpr typeRNum YAW_MAX = 0.4;
+
+constexpr typeRNum A_MIN = -1;      // Acceleration
+constexpr typeRNum A_MAX = 1;
+
+// OCP Parameters
+constexpr typeRNum DT = 0.01;
+constexpr typeRNum NHOR = 40;
+constexpr typeRNum THOR = 2;
+
+constexpr typeInt NX = 4;
+constexpr typeInt NU = 2;
+
+// Cost Weights
+constexpr typeRNum Q_POS = 5.0;
+constexpr typeRNum Q_THETA = 1.0;
+constexpr typeRNum Q_VEL = 0.1;
+constexpr typeRNum R_STEER = 0.1;
+
+
+
+// In your header or class definition:  
+class MPCNode : public rclcpp::Node {
 public:
-  MPCControllerNode()
-  : Node("minimal_publisher"), count_(0)
-  {
-    publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
-    timer_ = this->create_wall_timer(
-      500ms, std::bind(&MPCControllerNode::timer_callback, this));
+  MPCNode() : Node("mpc_node") {
+    RCLCPP_INFO(this->get_logger(), "MPCNode initialized");
+
+    // Load the reference path from CSV into a flat vector of doubles.
+    flat_path_points_ = load_flat_pathpoints();
+
+    // Set user parameters
+    user_param_.dt = DT;
+    user_param_.Q_pos = Q_POS;
+    user_param_.Q_theta = Q_THETA;
+    user_param_.Q_vel = Q_VEL;
+    user_param_.R_steer = R_STEER;
+
+    user_param_.wheelbase = L;
+    user_param_.max_velocity = V_MAX;
+    
+    // Log the loaded waypoints and trajectory
+    auto &pts = flat_path_points_;          //welche bedeutung hat das &
+    size_t num_waypoints = pts.size()/2;
+    RCLCPP_INFO(this->get_logger(), "Loaded %zu raw values(%zu waypoints)", pts.size(), num_waypoints); //loaded pts.size() raw values (size/2 waypoints)
+    
+    //why tho? just for logging?
+    for(size_t i = 0; i< num_waypoints; i++){ //for each in waypoints 
+      double x = pts[2*i];
+      double y = pts[2*i + 1];
+      RCLCPP_INFO(this->get_logger(), "waypoint %zu: x=%.6f, y=%.6f", i, x, y);
+    }
+
+    auto test = convertPointsToTrajectory(flat_path_points_);
+    for (int i = 0; i < test.size()/3; i++)
+    {
+      RCLCPP_INFO(this->get_logger(), "Traj %.d: x=%.3f, y=%.3f, yaw=%.3f", i,test[3*i],test[3*i +1],test[3*i +2]);
+    }
+    
+
+    // Subscribe to odometry.
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom", 10, 
+      std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
+
+    // Other publishers…
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
+    trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
+    active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
+    reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
+    publish_reference_path(); //load in the reference path in RViz
+    nearest_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("nearest_point", 10);
+    
+    // Initialize GRAMPC
+    init_grampc();
+  }
+
+  //what?
+  ~MPCNode() {
+    auto stop_msg = ackermann_msgs::msg::AckermannDriveStamped();
+    stop_msg.drive.speed = 0.0;
+    if (drive_publisher_) {
+      drive_publisher_->publish(stop_msg);
+    }
   }
 
 private:
-  void timer_callback()
-  {
-    auto message = std_msgs::msg::String();
-    message.data = "Hello, world! " + std::to_string(count_++);
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
-    publisher_->publish(message);
+  // Publishers/subscribers...
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
+
+  rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr drive_publisher_;
+
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr nearest_point_publisher_;
+
+  // GRAMPC pointer
+  TYPE_GRAMPC_POINTER(grampc)
+
+  // Flat reference path (each waypoint stored as [x, y])
+  vector<double> flat_path_points_;
+
+  // This member holds the computed reference trajectory (flattened), i.e. for each prediction step: [x_ref, y_ref, yaw_ref]
+  vector<double> ref_traj_;
+
+  // Store the user parameters to pass to grampc
+  UserParam user_param_;
+
+  // --------------------------
+  // Load CSV file into a flat vector of doubles.
+  vector<double> load_flat_pathpoints() {
+    vector<double> points;
+    ifstream file(waypoint_file);
+    string line;
+
+    while (getline(file, line)){
+      if (line.empty())
+        continue;
+
+      stringstream stream_line(line);
+      string x_str, y_str;
+      if (getline(stream_line, x_str, ',') && getline(stream_line, y_str, ',')) {
+        double x = stod(x_str);
+        double y = stod(y_str);
+        points.push_back(x);
+        points.push_back(y);
+      }
+    }
+
+    //not needed for my map
+    //points.pop_back(); // In my_map_ref.csv the first and last point are the same causing some trouble later (division by zero leading to nan values)
+    return points;
+    
+  } 
+
+  // --------------------------
+  // Compute a reference trajectory over the horizon.
+  // Here, we compute a vector with Nhor * 3 elements: for each step, [x_ref, y_ref, yaw_ref].
+  vector<double> computeReferenceTrajectory(double current_x, double current_y, int Nhor, const vector<double>& flat_points) {
+    int num_points = flat_points.size() / 2;
+    //warum nearest index =0? und nicht -1
+    int nearest_idx = 0;
+    double min_dist = numeric_limits<double>::max();
+    for (int i = 0; i < num_points; i++) {
+      double x = flat_points[2 * i];
+      double y = flat_points[2 * i + 1];
+      //euklidische distanz
+      double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y));
+      if (d < min_dist) {
+        min_dist = d;
+        nearest_idx = i;
+      }
+    }
+
+    vector<double> traj; // Will contain [x_ref, y_ref, yaw_ref] for each step.
+    for (int i = 0; i < Nhor; i++) {
+      int idx = nearest_idx + i;
+      if (idx >= num_points){
+        //warum num_points-1? und nicht 0
+        idx = num_points - 1;
+      }
+      double x_ref = flat_points[2 * idx];
+      double y_ref = flat_points[2 * idx + 1];
+      double yaw_ref = 0.0;
+      if (idx < num_points - 1) {
+        double x_next = flat_points[2 * (idx + 1)];
+        double y_next = flat_points[2 * (idx + 1) + 1];
+        yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
+      }
+      traj.push_back(x_ref);
+      traj.push_back(y_ref);
+      traj.push_back(yaw_ref);
+    }
+    return traj;
   }
-  rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
-  size_t count_;
+  
+  std::vector<double> computeReferenceTrajectory(const std::vector<double>& flat_points,int nearest_idx,int num_points_ahead) {
+    int num_points = flat_points.size() / 2;
+    std::vector<double> traj;
+
+    for (int i = 0; i < num_points_ahead; ++i) {
+        int idx = (nearest_idx + i) % num_points;
+
+        double x_ref = flat_points[2 * idx];
+        double y_ref = flat_points[2 * idx + 1];
+
+        int next_idx = (idx + 1) % num_points;
+        double x_next = flat_points[2 * next_idx];
+        double y_next = flat_points[2 * next_idx + 1];
+
+        double yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
+
+        //why push back?
+        traj.push_back(x_ref);
+        traj.push_back(y_ref);
+        traj.push_back(yaw_ref);
+
+        //printf("idx: %d, next_idx: %d, xn: %f, xr: %f, yn: %f, yr: %f \n", idx, next_idx, x_next, x_ref, y_next, y_ref);
+    }
+
+    return traj;
+  }
+
+  //not reviewed yet
+  vector<double> convertPointsToTrajectory(const vector<double>& flat_points){
+    int num_points = flat_points.size()/2;
+    vector<double> traj; // Will contain [x_ref, y_ref, yaw_ref] for each step.
+
+    for (int i = 0; i < num_points; ++i) {
+      double x_ref = flat_points[2 * i];
+      double y_ref = flat_points[2 * i + 1];
+
+      int next_idx = (i + 1)%num_points; // Loop around if last point
+
+      double x_next = flat_points[2 * next_idx];
+      double y_next = flat_points[2 * next_idx + 1];
+      double yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
+
+      traj.push_back(x_ref);
+      traj.push_back(y_ref);
+      traj.push_back(yaw_ref);
+    }
+    return traj;
+  }
+
+  // --------------------------
+  // Get the index of the closest path point to the current position
+  typeInt getNearestIndex(double current_x, double current_y, const vector<double>& flat_points){
+    int num_points = flat_points.size() / 2;
+    int nearest_idx = 0;
+    double min_dist = numeric_limits<double>::max();
+    for (int i = 0; i < num_points; i++) {
+      double x = flat_points[2 * i];
+      double y = flat_points[2 * i + 1];
+      double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y));
+      if (d < min_dist) {
+        min_dist = d;
+        nearest_idx = i;
+      }
+    }
+
+    return nearest_idx;
+  }
+
+  // --------------------------
+  // GRAMPC initialization (set parameters, dt, horizon, etc.)
+  void init_grampc() {
+    // Init grampc
+    typeUSERPARAM *userparam = NULL;
+    grampc_init(&grampc, userparam);
+
+    // Set initial state and control limits
+    ctypeRNum x0[NX] = { 0.0, 0.0, 0.0 , 0.0};
+    ctypeRNum umin[NU] = {YAW_MIN, A_MIN};
+    ctypeRNum umax[NU] = {YAW_MAX, A_MAX};
+
+    grampc_setparam_real_vector(grampc, "x0", x0);
+    grampc_setparam_real_vector(grampc, "umin", umin);
+    grampc_setparam_real_vector(grampc, "umax", umax);
+
+    grampc_setparam_real(grampc, "dt", DT);
+    grampc_setparam_real(grampc, "t0", 0.0);
+
+    grampc_setopt_int(grampc, "Nhor", NHOR);
+    grampc_setparam_real(grampc, "Thor", THOR);
+
+    //Important!! Without it the car drives serpentine-like
+    grampc_setopt_string(grampc, "ShiftControl", "on");
+
+    // Set number of gradient iterations (example)
+    grampc_setopt_int(grampc, "MaxGradIter", 5);
+    //grampc_setopt_int(grampc, "MaxMultIter", 3);
+
+    ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
+    grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
+  }
+
+
+  
+  // --------------------------
+  // Odom_callback function: 
+  // Update state and reference trajectory in userparam.
+  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
+    // Extract state from odometry.
+    double x = msg->pose.pose.position.x;
+    double y = msg->pose.pose.position.y;
+    double v = msg->twist.twist.linear.x;
+
+    double qx = msg->pose.pose.orientation.x;
+    double qy = msg->pose.pose.orientation.y;
+    double qz = msg->pose.pose.orientation.z;
+    double qw = msg->pose.pose.orientation.w;
+
+    double roll, pitch, yaw;
+    tf2::Quaternion q(qx, qy, qz, qw);
+    tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+
+    RCLCPP_INFO(this->get_logger(), "Odom received: x=%.6f, y=%.6f, yaw=%.2f, v=%.2f", x, y, yaw, v);
+    
+    // Compute the reference trajectory using the flat path points.
+    int nearest_idx = getNearestIndex(x,y,flat_path_points_);
+    auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
+
+    // for (int i = 0; i < ref_traj_.size()/3; i++)
+    // {
+    //   RCLCPP_INFO(this->get_logger(), "Traj: x=%.3f, y=%.3f, yaw=%.3f", ref_traj_[3*i],ref_traj_[3*i +1],ref_traj_[3*i +2]);
+    // }
+    
+
+    // Update reference trajectory of user parameters
+    user_param_.ref_traj = ref_traj_.data();
+    user_param_.ref_length = (int)ref_traj_.size()/3; 
+
+    grampc->userparam = static_cast<void*>(&user_param_);
+
+    // Update current state.
+    ctypeRNum x0[NX] = { x, y, yaw, v};
+    grampc_setparam_real_vector(grampc, "x0", x0);
+
+    // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
+    // grampc_setparam_real(grampc, "t0", t);
+
+    // Run GRAMPC.
+    RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
+    grampc_run(grampc);
+    RCLCPP_INFO(this->get_logger(), "Finished GRAMPC run. Status %d", grampc->sol->status);
+
+    // Extract control command.
+    double steering_angle = grampc->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
+    double acceleration = grampc->sol->unext[1];
+    double v_next = grampc->sol->xnext[3]; // Extract the velocity state of the next solution step
+    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%2.f", steering_angle, v_next, acceleration);
+
+    // for (int i = 0; i < NHOR; ++i)
+    // {
+    //   double x_pred = grampc->rws->x[i * NX];
+    //   double y_pred = grampc->rws->x[i * NX + 1];
+    //   double yaw_pred = grampc->rws->x[i * NX + 2];
+    //   double v_pred = grampc->rws->x[i * NX + 3];
+    //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
+
+    //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
+    // }
+    
+    if (isnan(v_next) || isnan(steering_angle)){
+      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+      drive_msg.drive.speed = 0.0;
+      drive_msg.drive.steering_angle = 0.0;
+      drive_publisher_->publish(drive_msg);
+
+      RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
+
+      rclcpp::shutdown();
+    }
+
+    // Publish control command.
+    auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+    drive_msg.drive.speed = v_next;
+    drive_msg.drive.steering_angle = steering_angle;
+    drive_publisher_->publish(drive_msg);
+
+    // Optionally publish predicted trajectory markers.
+    publish_current_ref_trajectory();
+    publish_mpc_trajectory();
+  }
+
+  // --------------------------
+  // Visualize MPC horizon trajectory in RViz.
+  void publish_mpc_trajectory() {
+    visualization_msgs::msg::MarkerArray marker_array;
+    visualization_msgs::msg::Marker point;
+    point.header.frame_id = "map";
+    point.header.stamp = this->now();
+    point.ns = "mpc_horizon";
+    point.type = visualization_msgs::msg::Marker::SPHERE;
+    point.action = visualization_msgs::msg::Marker::ADD;
+    //Scale and color of the sphere
+    point.scale.x = 0.1; 
+    point.scale.y = 0.1;
+    point.scale.z = 0.1;
+    point.color.r = 1.0;
+    point.color.g = 0.0;
+    point.color.b = 0.0;
+    point.color.a = 1.0;
+
+    for (int i = 0; i < NHOR; i++) {
+      point.id = i;
+      point.pose.position.x = grampc->rws->x[i * NX];
+      point.pose.position.y = grampc->rws->x[i * NX + 1];
+      point.pose.position.z = 0.1; //points are floating a bit over ground
+      marker_array.markers.push_back(point);
+    }
+    trajectory_publisher_->publish(marker_array);
+  }
+
+  // --------------------------
+  // Visualize reference path.
+  void publish_reference_path() {
+    visualization_msgs::msg::Marker path;
+    path.header.frame_id = "map";
+    path.header.stamp = this->now();
+    path.ns = "reference_path";
+    path.id = 0;
+    path.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    path.action = visualization_msgs::msg::Marker::ADD;
+    //scale and color of the line
+    path.scale.x = 0.1;
+    path.color.r = 0.0;
+    path.color.g = 1.0;
+    path.color.b = 0.0;
+    path.color.a = 1.0;
+    for (size_t i = 0; i < flat_path_points_.size() / 2; i++) {
+      geometry_msgs::msg::Point p;
+      p.x = flat_path_points_[2 * i];
+      p.y = flat_path_points_[2 * i + 1];
+      p.z = 0.1;    //line is floating a bit over ground
+      path.points.push_back(p);
+    }
+    reference_publisher_->publish(path);
+  }
+
+  void publish_current_ref_trajectory(){
+    visualization_msgs::msg::MarkerArray marker_array;
+    visualization_msgs::msg::Marker point;
+    point.header.frame_id = "map";
+    point.header.stamp = this->now();
+    point.ns = "mpc_ref_traj";
+    point.type = visualization_msgs::msg::Marker::SPHERE;
+    point.action = visualization_msgs::msg::Marker::ADD;
+    //Scale and color of the sphere
+    point.scale.x = 0.1; 
+    point.scale.y = 0.1;
+    point.scale.z = 0.1;
+    point.color.r = 0.0;
+    point.color.g = 0.0;
+    point.color.b = 1.0;
+    point.color.a = 1.0;
+
+    for (int i = 0; i < user_param_.ref_length; i++) {
+      point.id = i;
+      point.pose.position.x = user_param_.ref_traj[3*i];
+      point.pose.position.y = user_param_.ref_traj[3*i + 1];
+      point.pose.position.z = 0.1; //points are floating a bit over ground
+      marker_array.markers.push_back(point);
+    }
+    active_ref_publisher_->publish(marker_array);
+  }
 };
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<MPCControllerNode>());
+  rclcpp::spin(std::make_shared<MPCNode>());
   rclcpp::shutdown();
   return 0;
 }
-

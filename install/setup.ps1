@@ -23,9 +23,15 @@ function _colcon_prefix_chain_powershell_source_script {
 
 # source chained prefixes
 _colcon_prefix_chain_powershell_source_script "/opt/ros/foxy\local_setup.ps1"
+<<<<<<< Updated upstream
 _colcon_prefix_chain_powershell_source_script "/home/emelie/ba_ws/src/ba_roslab/ba_roslab/install\local_setup.ps1"
 _colcon_prefix_chain_powershell_source_script "/home/emelie/ba_ws/install\local_setup.ps1"
+=======
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
 _colcon_prefix_chain_powershell_source_script "/home/emelie/install\local_setup.ps1"
+=======
+>>>>>>> Stashed changes
 
 # source this prefix
 $env:COLCON_CURRENT_PREFIX=(Split-Path $PSCommandPath -Parent)

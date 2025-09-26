@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/foxy/**"
+                "/opt/ros/foxy/**",
+                "${workspaceFolder}/src/external/grampc/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

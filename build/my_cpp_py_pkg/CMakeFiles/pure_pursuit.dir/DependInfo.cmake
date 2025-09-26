@@ -17,6 +17,8 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
+  "/home/emelie/ba_ws_com/src/my_cpp_py_pkg/include"
+  "/home/emelie/ba_ws_com/src/external/grampc/include"
   "/opt/ros/foxy/include"
   )
 

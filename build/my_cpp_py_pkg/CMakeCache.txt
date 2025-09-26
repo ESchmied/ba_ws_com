@@ -272,7 +272,7 @@ SITE:STRING=DESKTOP-RDCIGQM
 TinyXML2_DIR:PATH=TinyXML2_DIR-NOTFOUND
 
 //Path to a library.
-_lib:FILEPATH=/opt/ros/foxy/lib/libtf2.so
+_lib:FILEPATH=/opt/ros/foxy/lib/libackermann_msgs__rosidl_typesupport_fastrtps_cpp.so
 
 //The directory containing a CMake configuration file for ackermann_msgs.
 ackermann_msgs_DIR:PATH=/opt/ros/foxy/share/ackermann_msgs/cmake
