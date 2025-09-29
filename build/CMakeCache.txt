@@ -271,11 +271,7 @@ SITE:STRING=DESKTOP-RDCIGQM
 TinyXML2_DIR:PATH=TinyXML2_DIR-NOTFOUND
 
 //Path to a library.
-<<<<<<< Updated upstream
-_lib:FILEPATH=/opt/ros/foxy/lib/libtf2.so
-=======
 _lib:FILEPATH=/opt/ros/foxy/lib/libackermann_msgs__rosidl_typesupport_fastrtps_cpp.so
->>>>>>> Stashed changes
 
 //The directory containing a CMake configuration file for ackermann_msgs.
 ackermann_msgs_DIR:PATH=/opt/ros/foxy/share/ackermann_msgs/cmake
@@ -376,12 +372,6 @@ ament_xmllint_BIN:FILEPATH=/opt/ros/foxy/bin/ament_xmllint
 //The directory containing a CMake configuration file for builtin_interfaces.
 builtin_interfaces_DIR:PATH=/opt/ros/foxy/share/builtin_interfaces/cmake
 
-<<<<<<< Updated upstream
-//The directory containing a CMake configuration file for console_bridge.
-console_bridge_DIR:PATH=/opt/ros/foxy/lib/x86_64-linux-gnu/console_bridge/cmake
-
-=======
->>>>>>> Stashed changes
 //The directory containing a CMake configuration file for fastcdr.
 fastcdr_DIR:PATH=/opt/ros/foxy/lib/cmake/fastcdr
 
@@ -505,12 +495,6 @@ statistics_msgs_DIR:PATH=/opt/ros/foxy/share/statistics_msgs/cmake
 //The directory containing a CMake configuration file for std_msgs.
 std_msgs_DIR:PATH=/opt/ros/foxy/share/std_msgs/cmake
 
-<<<<<<< Updated upstream
-//The directory containing a CMake configuration file for tf2.
-tf2_DIR:PATH=/opt/ros/foxy/share/tf2/cmake
-
-=======
->>>>>>> Stashed changes
 //The directory containing a CMake configuration file for tracetools.
 tracetools_DIR:PATH=/opt/ros/foxy/share/tracetools/cmake
 
