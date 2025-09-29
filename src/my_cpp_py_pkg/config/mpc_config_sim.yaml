@@ -1,0 +1,57 @@
+mpc_node:
+  ros__parameters:
+    waypoint_file: "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv"
+    
+    # TODO: Maybe use it as a parameter that the MPC should optimize?
+    considered_points: 30 # Number of reference points that are considered in one MPC step. It should match Nhor
+    
+    sim: True
+
+    # The simulation directly provides an odom topic
+    # No pose and twist topic necessary
+    odom: "/ego_racecar/odom"
+    pose: ""
+    twist: ""
+    drive: "/drive"
+
+    NX: 6
+    NU: 2
+    NH: 3
+
+    dt: 0.01
+    Nhor: 30
+    Thor: 3.0
+
+    Q_pos: 0.0 # Deactivate tracking the given reference path (only track yaw)
+    Q_theta: 1.0
+    Q_vel: 1.0
+
+    Q_pos_T: 10.0
+    Q_theta_T: 10.0
+    Q_vel_T: 1.0
+
+    R_steer: 1.0 # 0.5 to 1.0 seems to be a nice range
+    R_accel: 1.0 # Or 0.0, tuning. Maybe just punish braking?
+
+    max_velocity: 2.0
+    v_switch: 0.5
+
+    yaw_min: -0.5
+    yaw_max: 0.5
+    acc_min: -10.0
+    acc_max: 10.0
+
+    wheelbase: 0.33
+    mass: 4.0
+    lf: 0.165
+    lr: 0.165
+    C_af: 5.0
+    C_ar: 5.0
+    I_z: 0.05
+
+    centerline_dist: 0.5
+    soft_constraints: False
+
+    # The maximum number of potential obstacles needs to be specified in advanced
+    # The GRAMPC needs to know how many inequality constraints to set up
+    max_num_obstacles: 0
