@@ -59,7 +59,7 @@
 
 //wrap to pi
 typeInt getNearestIndex(double current_x, double current_y, const double* ref, int ref_length) {
-    //warum 0 und nicht -1?
+    //warum 0 und nicht -1? no reason
     int nearest_idx = 0;
     double min_dist = 10000000.0; // Note: Hardcoded
 
@@ -107,7 +107,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
 void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
 {
     UserParam* param = (UserParam*) userparam;
-    double L = param->wheelbase;
+    double L = param->wheelbase; //abstand vorder radachse hintere Radachse
 
     out[0] = x[3] * COS(x[2]);            //dx/dt =v*cos(theta)
     out[1] = x[3] * SIN(x[2]);            // dy/dt = v * sin(theta)
@@ -119,6 +119,7 @@ void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
 void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
 {
+    // vec zur opimierung der berechnung i guess
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
 
@@ -156,17 +157,17 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     int ref_length = param ->ref_length; //was ist ref_length? vielleicht die waypoint listen länge
 
     int nearest_idx = getNearestIndex(x[0], x[1], ref_traj, ref_length);
-    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length 
+    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length falls liste zuende 
 
     //printf("nearest idx: %d, next idx: %d t: %f \n", nearest_idx, next_idx, t);
 
     // Coords of nearest point
     double nearest_x = ref_traj[3*nearest_idx];
-    double nearest_y = ref_traj[3*nearest_idx + 1]; //woher das +1?
+    double nearest_y = ref_traj[3*nearest_idx + 1]; 
 
     // Coords of next point
     double next_x = ref_traj[3*next_idx];
-    double next_y = ref_traj[3*next_idx + 1]; //woher das +1?
+    double next_y = ref_traj[3*next_idx + 1];
 
     // Vector entries from nearest to current position
     double nearest_to_current_x = x[0] - nearest_x;
@@ -175,15 +176,15 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     // Normalized vector entries from nearest to next point
     double nearest_to_next_x = next_x - nearest_x;
     double nearest_to_next_y = next_y - nearest_y;
+    double nearest_to_next_length = sqrt(POW2(nearest_to_next_x) + POW2(nearest_to_next_y)); //normalisierter Vector
 
-    double nearest_to_next_length = sqrt(POW2(nearest_to_next_x) + POW2(nearest_to_next_y));
     nearest_to_next_x /= nearest_to_next_length;
     nearest_to_next_y /= nearest_to_next_length;
 
     // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
     double proj = (nearest_to_current_x * nearest_to_next_x) + (nearest_to_current_y * nearest_to_next_y); // dot(ntc, ntn)
 
-    double x_ref = nearest_x + proj * nearest_to_next_x; //sehr weit weg
+    double x_ref = nearest_x + proj * nearest_to_next_x; 
     double y_ref = nearest_y + proj * nearest_to_next_y;
 
     // The yaw reference can be taken from the provided trajectory at nearest idx
@@ -193,11 +194,10 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     //cost function
     out[0] =  param->Q_pos   * (POW2(x[0] - x_ref) + POW2(x[1] - y_ref)) //cte 
-            + param->Q_theta * POW2(x[2] - yaw_ref) //heading error
-            + param->Q_vel   * POW2(wrapToPi(x[3] - param->max_velocity)) //velocity error
+            + param->Q_theta * POW2(wrapToPi(x[2] - yaw_ref)) //heading error
+            + param->Q_vel   * POW2(x[3] - param->max_velocity) //velocity error
             + param->R_steer * POW2(u[0]);  //steering error to avoid jittering
-            // No term for acceleration yet
-            //no term for comfort yet
+            // No term for acceleration yet todo 
             
     //printf("x_ref: %.3f, y_ref: %.3f, yaw_ref: %.3f , yaw: %.3f \n",x_ref,y_ref,yaw_ref, x[2]);
 
@@ -233,7 +233,7 @@ void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     double nearest_to_next_length = sqrt(POW2(nearest_to_next_x) + POW2(nearest_to_next_y));
     //printf("length: %f \n", nearest_to_next_length);
-    nearest_to_next_x /= nearest_to_next_length; // /= entspricht ungleich?
+    nearest_to_next_x /= nearest_to_next_length;
     nearest_to_next_y /= nearest_to_next_length;
 
     // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
@@ -245,7 +245,7 @@ void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     // The yaw reference can be taken from the provided trajectory at nearest idx
     double yaw_ref = ref_traj[3*nearest_idx + 2];
 
-    //ableitung der einzelnen cost func aspekte? warum einzeln?
+    //ableitung der einzelnen cost func aspekte? warum einzeln? weil ableitungen nach einzelnen states
     out[0] = param->Q_pos   * 2.0 * (x[0] - x_ref);
     out[1] = param->Q_pos   * 2.0 * (x[1] - y_ref);
     out[2] = param->Q_theta * 2.0 * (wrapToPi(x[2] - yaw_ref));
@@ -256,7 +256,8 @@ void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 void dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes, typeUSERPARAM *userparam)
 {
     UserParam* param = (UserParam*)userparam;
-
+    
+    //ableitung nach output u[]
     out[0] = param->R_steer * 2.0 * u[0];
     out[1] = 0.0; // No term for the acceleration yet 
 
@@ -310,8 +311,11 @@ void dgdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     ------------------------------------------------------ **/
 void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
 {
+    //inquality restraints
     UserParam* param = (UserParam*)userparam;
-
+    //2 verschiedene restraints für v min und v max 
+    // todo stehen und rückwärtsfahren erlauben 
+    //potentiell strecke verlassen dazu/ in die wand fahren 
     out[0] = x[3] - param->max_velocity;    // v <= v_max
     out[1] = -x[3];                         // 0 <= v
 
@@ -319,10 +323,11 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
 void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
 {
+    //ableitung h nach x mal vector (but why?)
     out[0] = 0;
     out[1] = 0;
     out[2] = 0;
-    out[3] = vec[0] - vec[1];
+    out[3] = vec[0] - vec[1]; //reine optimierung kommt vom gradient based mpc
 
 }
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/

@@ -74,12 +74,12 @@ public:
     user_param_.Q_theta = Q_THETA;
     user_param_.Q_vel = Q_VEL;
     user_param_.R_steer = R_STEER;
-
-    user_param_.wheelbase = L;
+ 
+    user_param_.wheelbase = L; //abstand vorderachse und hinter achse
     user_param_.max_velocity = V_MAX;
     
     // Log the loaded waypoints and trajectory
-    auto &pts = flat_path_points_;          //welche bedeutung hat das &
+    auto &pts = flat_path_points_;          //welche bedeutung hat das & (reference?)
     size_t num_waypoints = pts.size()/2;
     RCLCPP_INFO(this->get_logger(), "Loaded %zu raw values(%zu waypoints)", pts.size(), num_waypoints); //loaded pts.size() raw values (size/2 waypoints)
     
@@ -106,6 +106,7 @@ public:
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
+    //does not get visualized
     publish_reference_path(); //load in the reference path in RViz
     nearest_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("nearest_point", 10);
     
@@ -113,7 +114,7 @@ public:
     init_grampc();
   }
 
-  //what?
+  //what? zum manuellen starten den autos
   ~MPCNode() {
     auto stop_msg = ackermann_msgs::msg::AckermannDriveStamped();
     stop_msg.drive.speed = 0.0;
@@ -166,7 +167,7 @@ private:
       }
     }
 
-    //not needed for my map
+    //not needed for my map i think
     //points.pop_back(); // In my_map_ref.csv the first and last point are the same causing some trouble later (division by zero leading to nan values)
     return points;
     
@@ -177,13 +178,13 @@ private:
   // Here, we compute a vector with Nhor * 3 elements: for each step, [x_ref, y_ref, yaw_ref].
   vector<double> computeReferenceTrajectory(double current_x, double current_y, int Nhor, const vector<double>& flat_points) {
     int num_points = flat_points.size() / 2;
-    //warum nearest index =0? und nicht -1
+    //warum nearest index =0? und nicht -1? egal 
     int nearest_idx = 0;
     double min_dist = numeric_limits<double>::max();
     for (int i = 0; i < num_points; i++) {
       double x = flat_points[2 * i];
       double y = flat_points[2 * i + 1];
-      //euklidische distanz
+      //euklidische distanz, maby in funktion auslagern?
       double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y));
       if (d < min_dist) {
         min_dist = d;
@@ -200,7 +201,7 @@ private:
       }
       double x_ref = flat_points[2 * idx];
       double y_ref = flat_points[2 * idx + 1];
-      double yaw_ref = 0.0;
+      double yaw_ref = 0.0; //why yaw ref =0.0?
       if (idx < num_points - 1) {
         double x_next = flat_points[2 * (idx + 1)];
         double y_next = flat_points[2 * (idx + 1) + 1];
@@ -213,23 +214,23 @@ private:
     return traj;
   }
   
-  std::vector<double> computeReferenceTrajectory(const std::vector<double>& flat_points,int nearest_idx,int num_points_ahead) {
+  //überladene fkt, tut exakt das gleiche nur schöner i guess
+  std::vector<double> computeReferenceTrajectory(const std::vector<double>& flat_points, int nearest_idx, int num_points_ahead) {
     int num_points = flat_points.size() / 2;
     std::vector<double> traj;
 
     for (int i = 0; i < num_points_ahead; ++i) {
-        int idx = (nearest_idx + i) % num_points;
+        int idx = (nearest_idx + i) % num_points; //sorgt dafür das die idx immer auf punkte in der lister verweist
 
         double x_ref = flat_points[2 * idx];
         double y_ref = flat_points[2 * idx + 1];
 
-        int next_idx = (idx + 1) % num_points;
+        int next_idx = (idx + 1) % num_points; //if abfrage wird unnötig da modulo 
         double x_next = flat_points[2 * next_idx];
         double y_next = flat_points[2 * next_idx + 1];
-
+        
         double yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
 
-        //why push back?
         traj.push_back(x_ref);
         traj.push_back(y_ref);
         traj.push_back(yaw_ref);
@@ -240,11 +241,13 @@ private:
     return traj;
   }
 
-  //not reviewed yet
+  //---------------------------
+  //convert points to traj by adding yaw_ref 
   vector<double> convertPointsToTrajectory(const vector<double>& flat_points){
     int num_points = flat_points.size()/2;
     vector<double> traj; // Will contain [x_ref, y_ref, yaw_ref] for each step.
 
+    //for each waypoint
     for (int i = 0; i < num_points; ++i) {
       double x_ref = flat_points[2 * i];
       double y_ref = flat_points[2 * i + 1];
@@ -253,7 +256,7 @@ private:
 
       double x_next = flat_points[2 * next_idx];
       double y_next = flat_points[2 * next_idx + 1];
-      double yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
+      double yaw_ref = atan2(y_next - y_ref, x_next - x_ref); //atan2 berechnet globales yaw 
 
       traj.push_back(x_ref);
       traj.push_back(y_ref);
@@ -266,12 +269,12 @@ private:
   // Get the index of the closest path point to the current position
   typeInt getNearestIndex(double current_x, double current_y, const vector<double>& flat_points){
     int num_points = flat_points.size() / 2;
-    int nearest_idx = 0;
+    int nearest_idx = -1; // or -1 to make sure its not on the list already
     double min_dist = numeric_limits<double>::max();
     for (int i = 0; i < num_points; i++) {
       double x = flat_points[2 * i];
       double y = flat_points[2 * i + 1];
-      double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y));
+      double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y)); //eucl distance
       if (d < min_dist) {
         min_dist = d;
         nearest_idx = i;
@@ -323,7 +326,7 @@ private:
     // Extract state from odometry.
     double x = msg->pose.pose.position.x;
     double y = msg->pose.pose.position.y;
-    double v = msg->twist.twist.linear.x;
+    double v = msg->twist.twist.linear.x; //maby nicht in vicon msgs enthalten 
 
     double qx = msg->pose.pose.orientation.x;
     double qy = msg->pose.pose.orientation.y;
@@ -332,7 +335,7 @@ private:
 
     double roll, pitch, yaw;
     tf2::Quaternion q(qx, qy, qz, qw);
-    tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+    tf2::Matrix3x3(q).getRPY(roll, pitch, yaw); //warum hat die Matrix keinen Namen?
 
     RCLCPP_INFO(this->get_logger(), "Odom received: x=%.6f, y=%.6f, yaw=%.2f, v=%.2f", x, y, yaw, v);
     
@@ -381,7 +384,7 @@ private:
     //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
     // }
     
-    if (isnan(v_next) || isnan(steering_angle)){
+    if (isnan(v_next) || isnan(steering_angle)){ //what does is nan? nan ^= not-a-number
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = 0.0;
       drive_msg.drive.steering_angle = 0.0;
@@ -417,6 +420,7 @@ private:
     point.scale.x = 0.1; 
     point.scale.y = 0.1;
     point.scale.z = 0.1;
+
     point.color.r = 1.0;
     point.color.g = 0.0;
     point.color.b = 0.0;
@@ -434,6 +438,7 @@ private:
 
   // --------------------------
   // Visualize reference path.
+  //doesn not get visualized in rviz
   void publish_reference_path() {
     visualization_msgs::msg::Marker path;
     path.header.frame_id = "map";
@@ -443,7 +448,7 @@ private:
     path.type = visualization_msgs::msg::Marker::LINE_STRIP;
     path.action = visualization_msgs::msg::Marker::ADD;
     //scale and color of the line
-    path.scale.x = 0.1;
+    path.scale.x = 1.0;
     path.color.r = 0.0;
     path.color.g = 1.0;
     path.color.b = 0.0;
@@ -470,6 +475,7 @@ private:
     point.scale.x = 0.1; 
     point.scale.y = 0.1;
     point.scale.z = 0.1;
+
     point.color.r = 0.0;
     point.color.g = 0.0;
     point.color.b = 1.0;
