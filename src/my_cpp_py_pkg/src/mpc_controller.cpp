@@ -108,7 +108,7 @@ public:
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
     //does not get visualized
     publish_reference_path(); //load in the reference path in RViz
-    nearest_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("nearest_point", 10);
+    next_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
     
     // Initialize GRAMPC
     init_grampc();
@@ -132,7 +132,7 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
-  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr nearest_point_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr next_point_publisher_;
 
   // GRAMPC pointer
   TYPE_GRAMPC_POINTER(grampc)
@@ -176,6 +176,7 @@ private:
   // --------------------------
   // Compute a reference trajectory over the horizon.
   // Here, we compute a vector with Nhor * 3 elements: for each step, [x_ref, y_ref, yaw_ref].
+  /*
   vector<double> computeReferenceTrajectory(double current_x, double current_y, int Nhor, const vector<double>& flat_points) {
     int num_points = flat_points.size() / 2;
     //warum nearest index =0? und nicht -1? egal 
@@ -213,6 +214,7 @@ private:
     }
     return traj;
   }
+    */
   
   //überladene fkt, tut exakt das gleiche nur schöner i guess
   std::vector<double> computeReferenceTrajectory(const std::vector<double>& flat_points, int nearest_idx, int num_points_ahead) {
@@ -342,7 +344,8 @@ private:
     // Compute the reference trajectory using the flat path points.
     int nearest_idx = getNearestIndex(x,y,flat_path_points_);
     auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
-
+    publish_single_point(flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);  
+    
     // for (int i = 0; i < ref_traj_.size()/3; i++)
     // {
     //   RCLCPP_INFO(this->get_logger(), "Traj: x=%.3f, y=%.3f, yaw=%.3f", ref_traj_[3*i],ref_traj_[3*i +1],ref_traj_[3*i +2]);
@@ -411,7 +414,7 @@ private:
   void publish_mpc_trajectory() {
     visualization_msgs::msg::MarkerArray marker_array;
     visualization_msgs::msg::Marker point;
-    point.header.frame_id = "map";
+    point.header.frame_id = "/map";
     point.header.stamp = this->now();
     point.ns = "mpc_horizon";
     point.type = visualization_msgs::msg::Marker::SPHERE;
@@ -441,14 +444,14 @@ private:
   //doesn not get visualized in rviz
   void publish_reference_path() {
     visualization_msgs::msg::Marker path;
-    path.header.frame_id = "map";
+    path.header.frame_id = "/map";
     path.header.stamp = this->now();
     path.ns = "reference_path";
     path.id = 0;
     path.type = visualization_msgs::msg::Marker::LINE_STRIP;
     path.action = visualization_msgs::msg::Marker::ADD;
     //scale and color of the line
-    path.scale.x = 1.0;
+    path.scale.x = 0.2;
     path.color.r = 0.0;
     path.color.g = 1.0;
     path.color.b = 0.0;
@@ -463,14 +466,15 @@ private:
     reference_publisher_->publish(path);
   }
 
+  //publish waypoints warum verschwinden die punkte hinter dem auto wieder
   void publish_current_ref_trajectory(){
     visualization_msgs::msg::MarkerArray marker_array;
     visualization_msgs::msg::Marker point;
-    point.header.frame_id = "map";
+    point.header.frame_id = "/map";
     point.header.stamp = this->now();
     point.ns = "mpc_ref_traj";
     point.type = visualization_msgs::msg::Marker::SPHERE;
-    point.action = visualization_msgs::msg::Marker::ADD;
+    //point.action = visualization_msgs::msg::Marker::ADD;
     //Scale and color of the sphere
     point.scale.x = 0.1; 
     point.scale.y = 0.1;
@@ -489,6 +493,35 @@ private:
       marker_array.markers.push_back(point);
     }
     active_ref_publisher_->publish(marker_array);
+  }
+
+  void publish_single_point(double x, double y){
+    visualization_msgs::msg::Marker marker;
+    marker.header.frame_id = "/map";
+    marker.header.stamp = this->now();
+    
+    marker.ns= "next_point";
+    marker.type = visualization_msgs::msg::Marker::SPHERE;
+    marker.id = 9999;
+
+    marker.scale.x =0.15;
+    marker.scale.y =0.15;
+    marker.scale.z =0.15;
+
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 1.0;
+    marker.color.a = 1.0;
+
+    marker.pose.position.x = x;
+    marker.pose.position.y = y;
+    marker.pose.position.z = 0.1;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+
+    next_point_publisher_->publish(marker);
   }
 };
 

@@ -212,7 +212,7 @@ private:
     marker.header.frame_id = "/map";
     marker.header.stamp = rclcpp::Clock().now();
     
-    marker.ns= "basic_shapes";
+    marker.ns= "goal_point";
     marker.type = visualization_msgs::msg::Marker::SPHERE;
     marker.id = 9999;
 
