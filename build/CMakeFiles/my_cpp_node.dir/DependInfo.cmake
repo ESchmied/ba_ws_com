@@ -11,7 +11,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/home/emelie/ba_ws_com/src/my_cpp_py_pkg/include"
-  "/home/emelie/ba_ws_com/src/external/grampc/include"
+  "/home/emelie/grampc/include"
   )
 
 # Targets to which this target links.

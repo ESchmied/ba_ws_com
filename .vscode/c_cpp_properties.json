@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/foxy/**",
-                "${workspaceFolder}/src/external/grampc/include",
+                "/home/emelie/grampc/**",
                 "${workspaceFolder}/src/my_cpp_py_pkg/include"
             ],
             "defines": [],
