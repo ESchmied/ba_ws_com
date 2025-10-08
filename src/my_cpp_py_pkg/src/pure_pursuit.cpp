@@ -135,7 +135,7 @@ public:
    double x = get<0>(transformed_waypoint); 
    double l = calc_euc_dist(car_position, next_waypoint);
    curvature= (2*x)/(l*l);
-   //woher kommt der atan? und woher die 0.324?
+   //woher kommt der atan? und woher die 0.324? degrees(atan(curvature * WHEEL_BASE))
    //curvature = atan(0.324 * curvature); 
 
    return -curvature;
