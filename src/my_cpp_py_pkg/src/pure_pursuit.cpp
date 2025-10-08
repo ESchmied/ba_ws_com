@@ -64,7 +64,7 @@ public:
     last_visited_waypoints.clear();
     steering_angle = 0;
 
-    string file_name = "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv";
+    string file_name = "/home/emelie/ba_ws/src/ba_roslab/ba_roslab/map/Spielberg_map_filled_klein_centerline.csv";
     ifstream Raceline_CSV;
     Raceline_CSV.open(file_name);
 
@@ -136,7 +136,7 @@ public:
    double l = calc_euc_dist(car_position, next_waypoint);
    curvature= (2*x)/(l*l);
    //woher kommt der atan? und woher die 0.324?
-   curvature = atan(0.324 * curvature); 
+   //curvature = atan(0.324 * curvature); 
 
    return -curvature;
   }
@@ -181,7 +181,7 @@ public:
     tuple<double, double> waypoint_t;
     tuple<double, double> waypoint_r;
     
-    double theta = get<2>(car_orientation);
+    double theta = M_PI/2 - get<2>(car_orientation);
 
     get<0>(waypoint_t) = get<0>(waypoint) - get<0>(car_pos);
     get<1>(waypoint_t) = get<1>(waypoint) - get<1>(car_pos);
