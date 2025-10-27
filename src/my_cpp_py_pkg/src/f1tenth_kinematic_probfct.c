@@ -157,7 +157,7 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     int ref_length = param ->ref_length; //was ist ref_length? vielleicht die waypoint listen länge
 
     int nearest_idx = getNearestIndex(x[0], x[1], ref_traj, ref_length);
-    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length falls liste zuende 
+    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length? falls liste zuende 
 
     //printf("nearest idx: %d, next idx: %d t: %f \n", nearest_idx, next_idx, t);
 
