@@ -22,10 +22,13 @@ extern "C" {
 #include <limits>
 #include <algorithm>
 
+
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv";
+const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_centerline.csv";
+const std::string inner_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_inner_border.csv";
+const std::string outer_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m]
@@ -66,7 +69,9 @@ public:
     RCLCPP_INFO(this->get_logger(), "MPCNode initialized");
 
     // Load the reference path from CSV into a flat vector of doubles.
-    flat_path_points_ = load_flat_pathpoints();
+    flat_path_points_ = load_flat_pathpoints(waypoint_file);
+    flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
+    flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
 
     // Set user parameters
     user_param_.dt = DT;
@@ -106,15 +111,18 @@ public:
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
-    //does not get visualized
-    publish_reference_path(); //load in the reference path in RViz
+    inner_border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("inner_border", 10);
+    outer_border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("outer_border", 10);
+
+    //to avoid overload of rviz not published
+    //publish_reference_path(); //load in the reference path in RViz
     next_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
     
     // Initialize GRAMPC
     init_grampc();
   }
 
-  //what? zum manuellen starten den autos
+  //what? zum manuellen starten den autos?
   ~MPCNode() {
     auto stop_msg = ackermann_msgs::msg::AckermannDriveStamped();
     stop_msg.drive.speed = 0.0;
@@ -133,12 +141,20 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr next_point_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr inner_border_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr outer_border_publisher_;
+  
 
   // GRAMPC pointer
   TYPE_GRAMPC_POINTER(grampc)
 
   // Flat reference path (each waypoint stored as [x, y])
   vector<double> flat_path_points_;
+
+  //Flat border points for (each point stored as [x,y])
+  vector<double> flat_inner_border_points_;
+  vector<double> flat_outer_border_points_;
+
 
   // This member holds the computed reference trajectory (flattened), i.e. for each prediction step: [x_ref, y_ref, yaw_ref]
   vector<double> ref_traj_;
@@ -148,9 +164,9 @@ private:
 
   // --------------------------
   // Load CSV file into a flat vector of doubles.
-  vector<double> load_flat_pathpoints() {
+  vector<double> load_flat_pathpoints(std::string file_path) {
     vector<double> points;
-    ifstream file(waypoint_file);
+    ifstream file(file_path);
     string line;
 
     while (getline(file, line)){
@@ -394,7 +410,7 @@ private:
       drive_publisher_->publish(drive_msg);
 
       RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
-
+      rclcpp::sleep_for(std::chrono::milliseconds(500));
       rclcpp::shutdown();
     }
 
@@ -406,6 +422,8 @@ private:
 
     // Optionally publish predicted trajectory markers.
     publish_current_ref_trajectory();
+    publish_border_points("inner_border", flat_inner_border_points_);
+    publish_border_points("outer_border", flat_outer_border_points_);
     publish_mpc_trajectory();
   }
 
@@ -436,12 +454,12 @@ private:
       point.pose.position.z = 0.1; //points are floating a bit over ground
       marker_array.markers.push_back(point);
     }
-    trajectory_publisher_->publish(marker_array);
+    //trajectory_publisher_->publish(marker_array);
   }
 
   // --------------------------
-  // Visualize reference path.
-  //doesn not get visualized in rviz
+  // Visualize reference path. (green line)
+  //does not get visualized in rviz
   void publish_reference_path() {
     visualization_msgs::msg::Marker path;
     path.header.frame_id = "/map";
@@ -452,6 +470,7 @@ private:
     path.action = visualization_msgs::msg::Marker::ADD;
     //scale and color of the line
     path.scale.x = 0.2;
+
     path.color.r = 0.0;
     path.color.g = 1.0;
     path.color.b = 0.0;
@@ -480,15 +499,44 @@ private:
     point.scale.y = 0.1;
     point.scale.z = 0.1;
 
-    point.color.r = 0.0;
+    point.color.r = 1.0;
     point.color.g = 0.0;
-    point.color.b = 1.0;
+    point.color.b = 0.0;
     point.color.a = 1.0;
 
     for (int i = 0; i < user_param_.ref_length; i++) {
       point.id = i;
       point.pose.position.x = user_param_.ref_traj[3*i];
       point.pose.position.y = user_param_.ref_traj[3*i + 1];
+      point.pose.position.z = 0.1; //points are floating a bit over ground
+      marker_array.markers.push_back(point);
+    }
+    active_ref_publisher_->publish(marker_array);
+  }
+
+ 
+  void publish_border_points(string ns, vector<double> border_points){
+    visualization_msgs::msg::MarkerArray marker_array;
+    visualization_msgs::msg::Marker point;
+    point.header.frame_id = "/map";
+    point.header.stamp = this->now();
+    point.ns = ns;
+    point.type = visualization_msgs::msg::Marker::SPHERE;
+    //point.action = visualization_msgs::msg::Marker::ADD;
+    //Scale and color of the sphere
+    point.scale.x = 0.3; 
+    point.scale.y = 0.3;
+    point.scale.z = 0.3;
+
+    point.color.r = 1.0;
+    point.color.g = 0.0;
+    point.color.b = 0.0;
+    point.color.a = 1.0;
+
+    for (int i = 0; i < border_points.size()/2; i++) {
+      point.id = i;
+      point.pose.position.x = border_points[2*i];
+      point.pose.position.y = border_points[2*i + 1];
       point.pose.position.z = 0.1; //points are floating a bit over ground
       marker_array.markers.push_back(point);
     }
@@ -504,9 +552,9 @@ private:
     marker.type = visualization_msgs::msg::Marker::SPHERE;
     marker.id = 9999;
 
-    marker.scale.x =0.15;
-    marker.scale.y =0.15;
-    marker.scale.z =0.15;
+    marker.scale.x = 0.15;
+    marker.scale.y = 0.15;
+    marker.scale.z = 0.15;
 
     marker.color.r = 1.0;
     marker.color.g = 0.0;
