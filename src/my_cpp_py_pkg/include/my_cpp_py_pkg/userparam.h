@@ -56,6 +56,11 @@ typedef struct{
     double* ref_traj;
     int ref_length;
 
+    double* inner_border;
+    int inner_border_len;
+    double* outer_border;
+    int outer_border_len;
+
 } UserParam;
 
 #ifdef __cplusplus

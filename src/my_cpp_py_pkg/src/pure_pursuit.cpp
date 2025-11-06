@@ -181,7 +181,7 @@ public:
     tuple<double, double> waypoint_t;
     tuple<double, double> waypoint_r;
     
-    double theta = M_PI/2 - get<2>(car_orientation);
+    double theta = M_PI/2 - get<2>(car_orientation); //yaw from odom msg
 
     get<0>(waypoint_t) = get<0>(waypoint) - get<0>(car_pos);
     get<1>(waypoint_t) = get<1>(waypoint) - get<1>(car_pos);

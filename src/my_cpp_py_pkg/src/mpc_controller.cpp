@@ -31,7 +31,7 @@ const std::string inner_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map
 const std::string outer_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_outer_border.csv";
 
 // Vehicle Parameters
-constexpr typeRNum L = 0.33;        // [m]
+constexpr typeRNum L = 0.33;        // [m] (Breite oder Länge?)
 constexpr typeRNum V_MAX = 2.0;     // [m/s]
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
@@ -40,7 +40,7 @@ constexpr typeRNum C_AF = 4.718;
 constexpr typeRNum C_AR = 5.4562;
 constexpr typeRNum IZ = 0.04712;
 
-constexpr typeRNum YAW_MIN = -0.4;  // Steering angle
+constexpr typeRNum YAW_MIN = -0.4;  // Steering angle in rad
 constexpr typeRNum YAW_MAX = 0.4;
 
 constexpr typeRNum A_MIN = -1;      // Acceleration
@@ -73,7 +73,7 @@ public:
     flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
     flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
 
-    // Set user parameters
+    // Set user parameters //where does it set the centerline?
     user_param_.dt = DT;
     user_param_.Q_pos = Q_POS;
     user_param_.Q_theta = Q_THETA;
@@ -164,7 +164,8 @@ private:
 
   // --------------------------
   // Load CSV file into a flat vector of doubles.
-  vector<double> load_flat_pathpoints(std::string file_path) {
+  std::vector<double> load_flat_pathpoints(std::string file_path) {
+
     vector<double> points;
     ifstream file(file_path);
     string line;
@@ -238,7 +239,7 @@ private:
     std::vector<double> traj;
 
     for (int i = 0; i < num_points_ahead; ++i) {
-        int idx = (nearest_idx + i) % num_points; //sorgt dafür das die idx immer auf punkte in der lister verweist
+        int idx = (nearest_idx + i) % num_points; //sorgt dafür das die idx immer auf punkte in der liste verweist
 
         double x_ref = flat_points[2 * idx];
         double y_ref = flat_points[2 * idx + 1];
@@ -275,6 +276,9 @@ private:
       double x_next = flat_points[2 * next_idx];
       double y_next = flat_points[2 * next_idx + 1];
       double yaw_ref = atan2(y_next - y_ref, x_next - x_ref); //atan2 berechnet globales yaw 
+      //cout << "Yaw_ref:" << yaw_ref;
+      //RCLCPP_INFO(this->get_logger(), "Yaw_ref: yaw=%.2f", yaw_ref);
+
 
       traj.push_back(x_ref);
       traj.push_back(y_ref);
@@ -284,7 +288,8 @@ private:
   }
 
   // --------------------------
-  // Get the index of the closest path point to the current position
+  // Get the index of the closest path point to the current position 
+  //for flat lists [x,y] 
   typeInt getNearestIndex(double current_x, double current_y, const vector<double>& flat_points){
     int num_points = flat_points.size() / 2;
     int nearest_idx = -1; // or -1 to make sure its not on the list already
@@ -301,6 +306,69 @@ private:
 
     return nearest_idx;
   }
+
+  /*------------------------------------------------------------------
+  transform car pos to centerline coord system to cdecide wich border is closer 
+  traj: flatlist of waypoints with yaw ref for car [x,y,yaw]
+  car_pos: tuple car_pos [x,y]
+  nearest_idx: idx of nearest centerline point 
+
+  tuple<double, double> transformCarPos(vector<double> traj, int nearest_idx, tuple<double, double> car_pos, tuple<double, double> proj_pos){
+    int next_idx = nearest_idx+1;
+
+    //double nearest_x_ref = traj[3*nearest_idx];
+    //double nearest_y_ref = traj[3*nearest_idx+1];
+    double nearest_yaw_ref = traj[3*nearest_idx+2];
+
+    //double next_x_ref = traj[3*next_idx];
+    //double next_y_ref = traj[3*next_idx*1];
+    double car_x = get<0>(car_pos);
+    double car_y = get<1>(car_pos);
+
+    //p' 
+    double proj_x = get<0>(proj_pos);
+    double proj_y = get<1>(proj_pos);
+
+
+    double xt = car_x - proj_x;
+    double yt = car_y - proj_y;
+
+    double xr = xt * cos(nearest_yaw_ref) - xt * sin(nearest_yaw_ref);
+    double yr = yt * sin(nearest_yaw_ref) + yt * cos(nearest_yaw_ref);
+
+    //if xr >0 => outer border?    
+    return make_tuple(xr, yr);
+  }
+
+  ----------------------------------------------------------------------------
+  calculates the orthogonal projektion of a point onto a line made by two points
+  haven't checked the math yet
+  
+  tuple<double, double> pointToLineProj(tuple<double, double> point, tuple<double, double> line_point_1, tuple<double, double> line_point_2){
+    double x = get<0>(point);
+    double y = get<1>(point);
+    double r0_x = get<0>(line_point_1);
+    double r0_y = get<1>(line_point_1);
+    double r_x = get<0>(line_point_2) - r0_x;
+    double r_y = get<1>(line_point_2) - r0_y;
+    tuple<double, double> r = make_tuple(get<0>(line_point_2) - r0_x, get<1>(line_point_2) - r0_y);
+
+    tuple<double, double> p_r0 = make_tuple(x-r0_x, y-r0_y);
+    
+    double proj_point_x = r0_x + (skalarProduct(p_r0, r)/skalarProduct(r,r)) * r_x; 
+    double proj_point_y = r0_y + (skalarProduct(p_r0, r)/skalarProduct(r,r)) * r_y; 
+
+    tuple<double, double> proj_point = make_tuple(proj_point_x, proj_point_y);    
+    return proj_point;
+  }
+
+
+  Skalar produkt zweier Vectoren
+
+  typeInt skalarProduct(tuple<double, double> vector1, tuple<double, double> vector2){
+    return get<0>(vector1) * get<0>(vector2) + get<1>(vector1)*get<1>(vector2);
+  }
+*/
 
   // --------------------------
   // GRAMPC initialization (set parameters, dt, horizon, etc.)
@@ -362,15 +430,24 @@ private:
     auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
     publish_single_point(flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);  
     
-    // for (int i = 0; i < ref_traj_.size()/3; i++)
-    // {
-    //   RCLCPP_INFO(this->get_logger(), "Traj: x=%.3f, y=%.3f, yaw=%.3f", ref_traj_[3*i],ref_traj_[3*i +1],ref_traj_[3*i +2]);
-    // }
+    //dont use! it makes the car drive weird, lots of swerving 
+    //for (int i = 0; i < ref_traj_.size()/3; i++)
+    //{
+    //  RCLCPP_INFO(this->get_logger(), "Traj: x=%.3f, y=%.3f, yaw=%.3f", ref_traj_[3*i],ref_traj_[3*i +1],ref_traj_[3*i +2]);
+    //}
     
 
     // Update reference trajectory of user parameters
     user_param_.ref_traj = ref_traj_.data();
-    user_param_.ref_length = (int)ref_traj_.size()/3; 
+    user_param_.ref_length = (int)ref_traj_.size()/3;
+    
+    auto outer_border = load_flat_pathpoints(outer_border_file);
+    auto inner_border = load_flat_pathpoints(inner_border_file);
+    user_param_.outer_border = outer_border.data();
+    user_param_.outer_border_len = (int)outer_border.size()/2;
+
+    user_param_.inner_border = inner_border.data();
+    user_param_.inner_border_len = (int)inner_border.size()/2;
 
     grampc->userparam = static_cast<void*>(&user_param_);
 

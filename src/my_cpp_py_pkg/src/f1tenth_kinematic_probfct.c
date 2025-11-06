@@ -53,11 +53,16 @@
 
 #define PI 3.14159265358979323846
 
+//define point struct 
+typedef struct {
+    double x;
+    double y;
+    double yaw; //not needed i think
+} my_point;
+
 
 //functions i might need 
 //get nearest  waypoint index
-
-//wrap to pi
 typeInt getNearestIndex(double current_x, double current_y, const double* ref, int ref_length) {
     //warum 0 und nicht -1? no reason
     int nearest_idx = 0;
@@ -85,6 +90,75 @@ typeRNum wrapToPi(const typeRNum number){
     return wrappedNumber;
 }
 
+// TODO add point projection fct here?
+my_point calculate_projected_ref_point(double* ref, int ref_length, my_point x){
+
+    int nearest_idx = getNearestIndex(x.x, x.y, ref, ref_length);
+    int next_idx = (nearest_idx + 1)%ref_length;
+
+    // Coords of nearest point
+    double nearest_x = ref[3*nearest_idx];
+    double nearest_y = ref[3*nearest_idx + 1];
+
+    // Coords of next point
+    double next_x = ref[3*next_idx];
+    double next_y = ref[3*next_idx + 1];
+
+    // Vector entries from nearest to current position
+    double nearest_to_current_x = x.x - nearest_x;
+    double nearest_to_current_y = x.y - nearest_y;
+
+    // Normalized vector entries from nearest to next point
+    double nearest_to_next_x = next_x - nearest_x;
+    double nearest_to_next_y = next_y - nearest_y;
+
+    double nearest_to_next_length = sqrt(POW2(nearest_to_next_x) + POW2(nearest_to_next_y));
+    nearest_to_next_x /= nearest_to_next_length;
+    nearest_to_next_y /= nearest_to_next_length;
+
+    // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
+    double proj = (nearest_to_current_x * nearest_to_next_x) + (nearest_to_current_y * nearest_to_next_y); // dot(ntc, ntn)
+
+    double x_ref = nearest_x + proj * nearest_to_next_x;
+    double y_ref = nearest_y + proj * nearest_to_next_y;
+    double yaw_ref = ref[3*nearest_idx +2];
+
+    // Result structure
+    my_point ref_point;
+
+    ref_point.x = x_ref;
+    ref_point.y = y_ref;
+    ref_point.yaw = yaw_ref;
+
+    return ref_point;
+}
+
+//vielleicht auch abstandsberechnung? transformation?
+
+//möglich als bool? x<0 or x>0
+my_point transform_car_pos(my_point proj_point, my_point car_pos){
+    
+    double yaw_ref = proj_point.yaw;
+
+    double xt = car_pos.x - proj_point.x;
+    double yt = car_pos.y - proj_point.y;
+
+    double xr = xt * cos(yaw_ref) - yt * sin(yaw_ref);
+    double yr = xt *sin(yaw_ref) + yt * cos(yaw_ref);
+    
+    my_point transf_car_pos;
+    transf_car_pos.x = xr;
+    transf_car_pos.y = yr;
+    //yaw not needed, can be left empty?
+
+    return transf_car_pos;    
+}
+
+typeRNum euclidian_distance_sqrd(my_point point1, my_point point2){
+    return POW2(point1.x + point2.x) + POW2(point1.y + point2.y);
+}
+
+
 
 /** OCP dimensions: states (Nx), controls (Nu), parameters (Np), equalities (Ng), 
     inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
@@ -93,7 +167,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
     *Nx = 4;    //Number of states [x, y, yaw, v]
     *Nu = 2;    //Number of controls [steering, acceleration]
     *Np = 0;    //Number of paramters
-    *Nh = 2;    //Number of inequalities (maby 1?)
+    *Nh = 3;    //Number of inequalities (maby 1?)
     *Ng = 0;    //Number of equalities
     *NgT = 0;
     *NhT = 0;
@@ -308,17 +382,64 @@ void dgdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
 
 
 /** Inequality constraints h(t,x(t),u(t),p,param,userparam) <= 0 
+ * gesammte h fct soll kleiner als Null bleiben -> out [] = term kleiner als 0
     ------------------------------------------------------ **/
 void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
 {
     //inquality restraints
     UserParam* param = (UserParam*)userparam;
+
+    double* ref = param->ref_traj;
+    int ref_len = param->ref_length;
+
+    double* outer_border = param->outer_border;
+    int outer_border_len = param->outer_border_len;
+
+    double* inner_border = param->inner_border;
+    int inner_border_len = param->inner_border_len;
+
+    double* border;
+    int border_len;
+
+    my_point car_pos;
+    car_pos.x = x[0];
+    car_pos.y = x[1]; 
+    //yaw can be left empty?
+
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben 
     //potentiell strecke verlassen dazu/ in die wand fahren 
-    out[0] = x[3] - param->max_velocity;    // v <= v_max
+    //wie werden dadurch größer oder kleiner dargestllt? 
+    out[0] = x[3] - param->max_velocity;    // v <= v_max   
     out[1] = -x[3];                         // 0 <= v
 
+    //border constraint
+    //project car pos onto centerline
+    my_point proj_ref_point = calculate_projected_ref_point(ref, ref_len, car_pos);
+
+    my_point transformed_car_pos = transform_car_pos(proj_ref_point, car_pos);
+
+    if(transformed_car_pos.x > 0){
+        //choose outer border
+        border = outer_border;
+        border_len = outer_border_len;
+    }
+    else{
+        //choose inner border
+        //even if same, because ots gonna be more often the inner border thats the problem, because of time optimization
+        border = inner_border;
+        border_len = inner_border_len;
+    }
+    
+    //find border point to compare too, might not be exact enough
+    my_point proj_border_point = calculate_projected_ref_point(border, border_len, proj_ref_point);
+
+    //calculate distance between proj_ref_point und x 
+    typeRNum distance_center_sqrd = euclidian_distance_sqrd(proj_ref_point, car_pos);
+    typeRNum distance_border_sqrd = euclidian_distance_sqrd(proj_ref_point, proj_border_point);
+
+    //noch ohne car_width
+    out[3] = distance_center_sqrd - distance_border_sqrd; //abstand auto-centerline < abstand centerline-border
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
 void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
