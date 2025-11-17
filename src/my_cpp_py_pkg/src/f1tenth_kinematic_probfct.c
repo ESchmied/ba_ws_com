@@ -154,8 +154,9 @@ my_point transform_car_pos(my_point proj_point, my_point car_pos){
     return transf_car_pos;    
 }
 
-typeRNum euclidian_distance_sqrd(my_point point1, my_point point2){
-    return POW2(point1.x + point2.x) + POW2(point1.y + point2.y);
+typeRNum euclidian_distance(my_point point1, my_point point2){
+    double dist_sqrd = POW2(point1.x - point2.x) + POW2(point1.y - point2.y);
+    return sqrt(dist_sqrd);
 }
 
 
@@ -175,7 +176,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
 }
 
 //was ist out?
-//why no typeGrampcparam
+//why no typeGrampcparam -<v.2.2
 /** System function f(t,x,u,p,param,userparam) 
     ------------------------------------ **/
 void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
@@ -389,8 +390,10 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //inquality restraints
     UserParam* param = (UserParam*)userparam;
 
-    double* ref = param->ref_traj;
-    int ref_len = param->ref_length;
+    double* center_traj = param->center_traj;
+    int center_traj_len = param->center_traj_len;
+    
+    int car_width = param->width;
 
     double* outer_border = param->outer_border;
     int outer_border_len = param->outer_border_len;
@@ -401,21 +404,20 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     double* border;
     int border_len;
 
+
     my_point car_pos;
     car_pos.x = x[0];
     car_pos.y = x[1]; 
     //yaw can be left empty?
 
     //2 verschiedene restraints für v min und v max 
-    // todo stehen und rückwärtsfahren erlauben 
-    //potentiell strecke verlassen dazu/ in die wand fahren 
-    //wie werden dadurch größer oder kleiner dargestllt? 
+    // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
     out[0] = x[3] - param->max_velocity;    // v <= v_max   
     out[1] = -x[3];                         // 0 <= v
 
     //border constraint
     //project car pos onto centerline
-    my_point proj_ref_point = calculate_projected_ref_point(ref, ref_len, car_pos);
+    my_point proj_ref_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
 
     my_point transformed_car_pos = transform_car_pos(proj_ref_point, car_pos);
 
@@ -435,18 +437,31 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     my_point proj_border_point = calculate_projected_ref_point(border, border_len, proj_ref_point);
 
     //calculate distance between proj_ref_point und x 
-    typeRNum distance_center_sqrd = euclidian_distance_sqrd(proj_ref_point, car_pos);
-    typeRNum distance_border_sqrd = euclidian_distance_sqrd(proj_ref_point, proj_border_point);
+    typeRNum distance_center = euclidian_distance(proj_ref_point, car_pos);
+    typeRNum distance_border = euclidian_distance(proj_ref_point, proj_border_point);
 
-    //noch ohne car_width
-    out[3] = distance_center_sqrd - distance_border_sqrd; //abstand auto-centerline < abstand centerline-border
+    
+    out[2] = POW2(distance_center) - POW2(distance_border + car_width); //abstand auto-centerline < abstand centerline-border - car_width
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
 void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
 {
+    //inquality restraints
+    UserParam* param = (UserParam*)userparam;
+
+    double* center_traj = param->center_traj;
+    int center_traj_len = param->center_traj_len;
+
+    my_point car_pos;
+    car_pos.x = x[0];
+    car_pos.y = x[1]; 
+
+    //project car pos onto centerline
+    my_point proj_ref_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
+
     //ableitung h nach x mal vector (but why?)
-    out[0] = 0;
-    out[1] = 0;
+    out[0] = -2* (proj_ref_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    out[1] = -2* (proj_ref_point.y - x[1])* vec[2];
     out[2] = 0;
     out[3] = vec[0] - vec[1]; //reine optimierung kommt vom gradient based mpc
 

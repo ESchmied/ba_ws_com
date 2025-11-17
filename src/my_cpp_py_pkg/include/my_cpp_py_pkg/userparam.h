@@ -14,7 +14,7 @@ typedef struct{
     int NU;
     int NH;
 
-    double dt;
+    double dt; //dt *Nhor = Thor
     int Nhor;
     double Thor;
 
@@ -43,6 +43,7 @@ typedef struct{
     double acc_max;
 
     double wheelbase;
+    double width;
     double m;
     double lf;
     double lr;
@@ -53,11 +54,16 @@ typedef struct{
     // Others
     double centerline_dist;
     bool soft_constraints;
+    //ref traj = way points
     double* ref_traj;
     int ref_length;
-
+    //centerline for border contraint
+    double* center_traj;
+    int center_traj_len;
+    //inner border
     double* inner_border;
     int inner_border_len;
+    //outer border
     double* outer_border;
     int outer_border_len;
 

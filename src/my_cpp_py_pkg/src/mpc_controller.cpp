@@ -26,13 +26,15 @@ extern "C" {
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_centerline.csv";
-const std::string inner_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_inner_border.csv";
-const std::string outer_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_klein_outer_border.csv";
+const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_centerline.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
+const std::string centerline_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string inner_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
+const std::string outer_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
-constexpr typeRNum L = 0.33;        // [m] (Breite oder Länge?)
-constexpr typeRNum V_MAX = 2.0;     // [m/s]
+constexpr typeRNum L = 0.33;        // [m] (Länge)
+constexpr typeRNum W = 0.3;
+constexpr typeRNum V_MAX = 2.0;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -43,22 +45,22 @@ constexpr typeRNum IZ = 0.04712;
 constexpr typeRNum YAW_MIN = -0.4;  // Steering angle in rad
 constexpr typeRNum YAW_MAX = 0.4;
 
-constexpr typeRNum A_MIN = -1;      // Acceleration
-constexpr typeRNum A_MAX = 1;
+constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
+constexpr typeRNum A_MAX = 1.5;
 
-// OCP Parameters
-constexpr typeRNum DT = 0.01;
-constexpr typeRNum NHOR = 40;
-constexpr typeRNum THOR = 2;
+// OCP Parameters dt*Nhor = Thor
+constexpr typeRNum DT = 0.005;  //ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 20; //40
+constexpr typeRNum THOR = 1.5; //2
 
 constexpr typeInt NX = 4;
 constexpr typeInt NU = 2;
 
 // Cost Weights
-constexpr typeRNum Q_POS = 5.0;
-constexpr typeRNum Q_THETA = 1.0;
+constexpr typeRNum Q_POS = 3.0;
+constexpr typeRNum Q_THETA = 3.0;
 constexpr typeRNum Q_VEL = 0.1;
-constexpr typeRNum R_STEER = 0.1;
+constexpr typeRNum R_STEER = 0.7;
 
 
 
@@ -70,10 +72,11 @@ public:
 
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
+    flat_center_points_ = load_flat_pathpoints(centerline_file);
     flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
     flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
 
-    // Set user parameters //where does it set the centerline?
+    // Set user parameters 
     user_param_.dt = DT;
     user_param_.Q_pos = Q_POS;
     user_param_.Q_theta = Q_THETA;
@@ -150,6 +153,7 @@ private:
 
   // Flat reference path (each waypoint stored as [x, y])
   vector<double> flat_path_points_;
+  vector<double> flat_center_points_;
 
   //Flat border points for (each point stored as [x,y])
   vector<double> flat_inner_border_points_;
@@ -307,68 +311,6 @@ private:
     return nearest_idx;
   }
 
-  /*------------------------------------------------------------------
-  transform car pos to centerline coord system to cdecide wich border is closer 
-  traj: flatlist of waypoints with yaw ref for car [x,y,yaw]
-  car_pos: tuple car_pos [x,y]
-  nearest_idx: idx of nearest centerline point 
-
-  tuple<double, double> transformCarPos(vector<double> traj, int nearest_idx, tuple<double, double> car_pos, tuple<double, double> proj_pos){
-    int next_idx = nearest_idx+1;
-
-    //double nearest_x_ref = traj[3*nearest_idx];
-    //double nearest_y_ref = traj[3*nearest_idx+1];
-    double nearest_yaw_ref = traj[3*nearest_idx+2];
-
-    //double next_x_ref = traj[3*next_idx];
-    //double next_y_ref = traj[3*next_idx*1];
-    double car_x = get<0>(car_pos);
-    double car_y = get<1>(car_pos);
-
-    //p' 
-    double proj_x = get<0>(proj_pos);
-    double proj_y = get<1>(proj_pos);
-
-
-    double xt = car_x - proj_x;
-    double yt = car_y - proj_y;
-
-    double xr = xt * cos(nearest_yaw_ref) - xt * sin(nearest_yaw_ref);
-    double yr = yt * sin(nearest_yaw_ref) + yt * cos(nearest_yaw_ref);
-
-    //if xr >0 => outer border?    
-    return make_tuple(xr, yr);
-  }
-
-  ----------------------------------------------------------------------------
-  calculates the orthogonal projektion of a point onto a line made by two points
-  haven't checked the math yet
-  
-  tuple<double, double> pointToLineProj(tuple<double, double> point, tuple<double, double> line_point_1, tuple<double, double> line_point_2){
-    double x = get<0>(point);
-    double y = get<1>(point);
-    double r0_x = get<0>(line_point_1);
-    double r0_y = get<1>(line_point_1);
-    double r_x = get<0>(line_point_2) - r0_x;
-    double r_y = get<1>(line_point_2) - r0_y;
-    tuple<double, double> r = make_tuple(get<0>(line_point_2) - r0_x, get<1>(line_point_2) - r0_y);
-
-    tuple<double, double> p_r0 = make_tuple(x-r0_x, y-r0_y);
-    
-    double proj_point_x = r0_x + (skalarProduct(p_r0, r)/skalarProduct(r,r)) * r_x; 
-    double proj_point_y = r0_y + (skalarProduct(p_r0, r)/skalarProduct(r,r)) * r_y; 
-
-    tuple<double, double> proj_point = make_tuple(proj_point_x, proj_point_y);    
-    return proj_point;
-  }
-
-
-  Skalar produkt zweier Vectoren
-
-  typeInt skalarProduct(tuple<double, double> vector1, tuple<double, double> vector2){
-    return get<0>(vector1) * get<0>(vector2) + get<1>(vector1)*get<1>(vector2);
-  }
-*/
 
   // --------------------------
   // GRAMPC initialization (set parameters, dt, horizon, etc.)
@@ -395,9 +337,11 @@ private:
     //Important!! Without it the car drives serpentine-like
     grampc_setopt_string(grampc, "ShiftControl", "on");
 
-    // Set number of gradient iterations (example)
-    grampc_setopt_int(grampc, "MaxGradIter", 5);
-    //grampc_setopt_int(grampc, "MaxMultIter", 3);
+    // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher
+    grampc_setopt_int(grampc, "MaxGradIter", 1);  //5
+    grampc_setopt_int(grampc, "MaxMultIter", 3); //10
+
+    grampc_setopt_string(grampc, "InequalityConstraints", "on");
 
     ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
     grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
@@ -427,8 +371,15 @@ private:
     
     // Compute the reference trajectory using the flat path points.
     int nearest_idx = getNearestIndex(x,y,flat_path_points_);
+    int nearest_center_idx = getNearestIndex(x,y, flat_center_points_);
+    //int nearest_inner_border_idx = getNearestIndex(x,y, flat_inner_border_points_);
+    //int nearest_outer_border_idx = getNearestIndex(x,y, flat_outer_border_points_);
+
     auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
-    publish_single_point(flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);  
+    auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+100);
+
+    //publish_single_point("nearest_inner_border", flat_inner_border_points_[nearest_inner_border_idx*2], flat_inner_border_points_[nearest_inner_border_idx*2 +1]);
+    //publish_single_point("nearest_outer_border", flat_outer_border_points_[nearest_outer_border_idx*2], flat_outer_border_points_[nearest_outer_border_idx*2 +1]);
     
     //dont use! it makes the car drive weird, lots of swerving 
     //for (int i = 0; i < ref_traj_.size()/3; i++)
@@ -440,14 +391,19 @@ private:
     // Update reference trajectory of user parameters
     user_param_.ref_traj = ref_traj_.data();
     user_param_.ref_length = (int)ref_traj_.size()/3;
-    
-    auto outer_border = load_flat_pathpoints(outer_border_file);
-    auto inner_border = load_flat_pathpoints(inner_border_file);
-    user_param_.outer_border = outer_border.data();
-    user_param_.outer_border_len = (int)outer_border.size()/2;
 
-    user_param_.inner_border = inner_border.data();
-    user_param_.inner_border_len = (int)inner_border.size()/2;
+    user_param_.center_traj = center_traj_.data();
+    user_param_.center_traj_len = center_traj_.size()/3;
+
+    
+    //update border of user param
+    //auto outer_border = load_flat_pathpoints(outer_border_file);
+    //auto inner_border = load_flat_pathpoints(inner_border_file);
+    user_param_.outer_border = flat_outer_border_points_.data();
+    user_param_.outer_border_len = (int)flat_outer_border_points_.size()/2;
+
+    user_param_.inner_border = flat_inner_border_points_.data();
+    user_param_.inner_border_len = (int)flat_inner_border_points_.size()/2;
 
     grampc->userparam = static_cast<void*>(&user_param_);
 
@@ -462,6 +418,11 @@ private:
     RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
     grampc_run(grampc);
     RCLCPP_INFO(this->get_logger(), "Finished GRAMPC run. Status %d", grampc->sol->status);
+
+    //publish after Grampc run to avoid interfering with the data update
+    publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);  
+    publish_single_point("car_pos", x, y);
+
 
     // Extract control command.
     double steering_angle = grampc->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
@@ -499,8 +460,13 @@ private:
 
     // Optionally publish predicted trajectory markers.
     publish_current_ref_trajectory();
-    publish_border_points("inner_border", flat_inner_border_points_);
-    publish_border_points("outer_border", flat_outer_border_points_);
+    publish_border_points("inner_border", flat_inner_border_points_); // why two different variables for userparam and publishing
+    publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
+
+
+    publish_border("inner_border_line", flat_inner_border_points_);
+    publish_border("outer_border_line", flat_outer_border_points_);
+    
     publish_mpc_trajectory();
   }
 
@@ -531,35 +497,34 @@ private:
       point.pose.position.z = 0.1; //points are floating a bit over ground
       marker_array.markers.push_back(point);
     }
-    //trajectory_publisher_->publish(marker_array);
+    trajectory_publisher_->publish(marker_array);
   }
 
   // --------------------------
   // Visualize reference path. (green line)
   //does not get visualized in rviz
-  void publish_reference_path() {
-    visualization_msgs::msg::Marker path;
-    path.header.frame_id = "/map";
-    path.header.stamp = this->now();
-    path.ns = "reference_path";
-    path.id = 0;
-    path.type = visualization_msgs::msg::Marker::LINE_STRIP;
-    path.action = visualization_msgs::msg::Marker::ADD;
+  void publish_border(string border_ns , vector<double> flat_border_points) {
+    visualization_msgs::msg::Marker border;
+    border.header.frame_id = "/map";
+    border.header.stamp = this->now();
+    border.ns = border_ns;
+    border.id = 0;
+    border.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    border.action = visualization_msgs::msg::Marker::ADD;
     //scale and color of the line
-    path.scale.x = 0.2;
-
-    path.color.r = 0.0;
-    path.color.g = 1.0;
-    path.color.b = 0.0;
-    path.color.a = 1.0;
-    for (size_t i = 0; i < flat_path_points_.size() / 2; i++) {
+    border.scale.x = 0.1;
+    border.color.r = 0.0;
+    border.color.g = 1.0;
+    border.color.b = 0.0;
+    border.color.a = 1.0;
+    for (size_t i = 0; i < flat_border_points.size() / 2; i++) {
       geometry_msgs::msg::Point p;
-      p.x = flat_path_points_[2 * i];
-      p.y = flat_path_points_[2 * i + 1];
+      p.x = flat_border_points[2 * i];
+      p.y = flat_border_points[2 * i + 1];
       p.z = 0.1;    //line is floating a bit over ground
-      path.points.push_back(p);
+      border.points.push_back(p);
     }
-    reference_publisher_->publish(path);
+    reference_publisher_->publish(border);
   }
 
   //publish waypoints warum verschwinden die punkte hinter dem auto wieder
@@ -601,9 +566,9 @@ private:
     point.type = visualization_msgs::msg::Marker::SPHERE;
     //point.action = visualization_msgs::msg::Marker::ADD;
     //Scale and color of the sphere
-    point.scale.x = 0.3; 
-    point.scale.y = 0.3;
-    point.scale.z = 0.3;
+    point.scale.x = 0.1; 
+    point.scale.y = 0.1;
+    point.scale.z = 0.1;
 
     point.color.r = 1.0;
     point.color.g = 0.0;
@@ -620,12 +585,12 @@ private:
     active_ref_publisher_->publish(marker_array);
   }
 
-  void publish_single_point(double x, double y){
+  void publish_single_point(string ns , double x, double y){
     visualization_msgs::msg::Marker marker;
     marker.header.frame_id = "/map";
     marker.header.stamp = this->now();
     
-    marker.ns= "next_point";
+    marker.ns= ns;
     marker.type = visualization_msgs::msg::Marker::SPHERE;
     marker.id = 9999;
 
