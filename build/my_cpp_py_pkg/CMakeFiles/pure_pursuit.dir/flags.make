@@ -6,5 +6,5 @@ CXX_FLAGS =   -Wall -Wextra -Wpedantic -std=gnu++14
 
 CXX_DEFINES = -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB
 
-CXX_INCLUDES = -I/home/emelie/ba_ws_com/src/my_cpp_py_pkg/include -I/home/emelie/grampc/include -isystem /opt/ros/foxy/include 
+CXX_INCLUDES = -I/home/emelies/ba_ws_com/src/my_cpp_py_pkg/include -I/home/emelies/grampc-2.2/include -isystem /opt/ros/foxy/include 
 
