@@ -1,8 +1,0 @@
-[01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:[m[K In member function ‘[01m[Kint Pure_Pursuit_Node::find_next_waypoint(int, std::tuple<float, float>, std::vector<std::tuple<double, double> >)[m[K’:
-[01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:159:21:[m[K [01;35m[Kwarning: [m[Kcomparison of integer expressions of different signedness: ‘[01m[Kint[m[K’ and ‘[01m[Kstd::vector<std::tuple<double, double> >::size_type[m[K’ {aka ‘[01m[Klong unsigned int[m[K’} [[01;35m[K-Wsign-compare[m[K]
-  159 |     if([01;35m[Knew_waypoint == path_points_2d.size()[m[K){
-      |        [01;35m[K~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~[m[K
-[01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:[m[K In member function ‘[01m[Kvoid Pure_Pursuit_Node::odom_callback(nav_msgs::msg::Odometry_<std::allocator<void> >::SharedPtr)[m[K’:
-[01m[K/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/pure_pursuit.cpp:271:27:[m[K [01;35m[Kwarning: [m[Kvariable ‘[01m[Ktransformed_waypoint[m[K’ set but not used [[01;35m[K-Wunused-but-set-variable[m[K]
-  271 |     tuple<double, double> [01;35m[Ktransformed_waypoint[m[K = transform_waypoint(nearest_waypoint, car_position_2d, car_orientation);
-      |                           [01;35m[K^~~~~~~~~~~~~~~~~~~~[m[K

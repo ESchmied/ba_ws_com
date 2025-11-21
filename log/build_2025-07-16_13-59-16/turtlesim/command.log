@@ -1,6 +1,0 @@
-Invoking command in '/home/emelie/ba_ws_com/build/turtlesim': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/emelie/ba_ws_com/src/ros_tutorials/turtlesim -DCMAKE_INSTALL_PREFIX=/home/emelie/ba_ws_com/install/turtlesim
-Invoked command in '/home/emelie/ba_ws_com/build/turtlesim' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake /home/emelie/ba_ws_com/src/ros_tutorials/turtlesim -DCMAKE_INSTALL_PREFIX=/home/emelie/ba_ws_com/install/turtlesim
-Invoking command in '/home/emelie/ba_ws_com/build/turtlesim': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/turtlesim -- -j4 -l4
-Invoked command in '/home/emelie/ba_ws_com/build/turtlesim' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --build /home/emelie/ba_ws_com/build/turtlesim -- -j4 -l4
-Invoking command in '/home/emelie/ba_ws_com/build/turtlesim': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/turtlesim
-Invoked command in '/home/emelie/ba_ws_com/build/turtlesim' returned '0': CMAKE_PREFIX_PATH=/opt/ros/foxy /usr/bin/cmake --install /home/emelie/ba_ws_com/build/turtlesim
