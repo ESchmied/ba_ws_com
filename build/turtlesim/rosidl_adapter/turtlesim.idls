@@ -1,8 +1,0 @@
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:action/RotateAbsolute.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:msg/Color.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:msg/Pose.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:srv/Kill.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:srv/SetPen.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:srv/Spawn.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:srv/TeleportAbsolute.idl
-/home/emelie/ba_ws_com/build/turtlesim/rosidl_adapter/turtlesim:srv/TeleportRelative.idl
