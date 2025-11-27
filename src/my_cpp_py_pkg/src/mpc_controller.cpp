@@ -26,10 +26,10 @@ extern "C" {
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_centerline.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
-const std::string centerline_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
-const std::string inner_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
-const std::string outer_border_file = "/home/emelie/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
+const std::string waypoint_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
+const std::string centerline_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string inner_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
+const std::string outer_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m] (Länge)
@@ -49,16 +49,16 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*Nhor = Thor
-constexpr typeRNum DT = 0.005;  //ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 20; //40
-constexpr typeRNum THOR = 1.5; //2
+constexpr typeRNum DT = 0.05;  //ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 51; //40
+constexpr typeRNum THOR = 2.5; //2
 
 constexpr typeInt NX = 4;
 constexpr typeInt NU = 2;
 
 // Cost Weights
-constexpr typeRNum Q_POS = 3.0;
-constexpr typeRNum Q_THETA = 3.0;
+constexpr typeRNum Q_POS = 5;
+constexpr typeRNum Q_THETA = 2.5;
 constexpr typeRNum Q_VEL = 0.1;
 constexpr typeRNum R_STEER = 0.7;
 
@@ -337,11 +337,17 @@ private:
     //Important!! Without it the car drives serpentine-like
     grampc_setopt_string(grampc, "ShiftControl", "on");
 
-    // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher
-    grampc_setopt_int(grampc, "MaxGradIter", 1);  //5
-    grampc_setopt_int(grampc, "MaxMultIter", 3); //10
+    //maby only in v2.3
+    //grampc_setopt_string(grampc, "Integrator", "discrete");
+
+    // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher 
+    grampc_setopt_int(grampc, "MaxGradIter", 4);  //5 //muss kleiner sein als MulInt DEFAULT 2
+    grampc_setopt_int(grampc, "MaxMultIter", 2); //10 DEFAULT 1
 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
+    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25);
+    grampc_setopt_real(grampc, "PenaltyMin", 1.7);
+
 
     ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
     grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
@@ -460,7 +466,7 @@ private:
 
     // Optionally publish predicted trajectory markers.
     publish_current_ref_trajectory();
-    publish_border_points("inner_border", flat_inner_border_points_); // why two different variables for userparam and publishing
+    publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
     publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
 
 

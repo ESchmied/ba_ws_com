@@ -14,9 +14,9 @@ typedef struct{
     int NU;
     int NH;
 
-    double dt; //dt *Nhor = Thor
+    double dt; //sampling time dt *Nhor = Thor 
     int Nhor;
-    double Thor;
+    double Thor; //prediction horizon T
 
     // Integral cost weights
     double Q_pos;

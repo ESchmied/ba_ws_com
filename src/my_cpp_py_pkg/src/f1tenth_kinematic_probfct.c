@@ -441,7 +441,8 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     typeRNum distance_border = euclidian_distance(proj_ref_point, proj_border_point);
 
     
-    out[2] = POW2(distance_center) - POW2(distance_border + car_width); //abstand auto-centerline < abstand centerline-border - car_width
+    out[2] = POW2(distance_center) - POW2(distance_border) + car_width; //abstand auto-centerline < abstand centerline-border - car_width 
+
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
 void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
