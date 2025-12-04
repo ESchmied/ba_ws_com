@@ -34,7 +34,7 @@ const std::string outer_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_ma
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m] (Länge)
 constexpr typeRNum W = 0.3;
-constexpr typeRNum V_MAX = 2.5;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 2;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -57,7 +57,7 @@ constexpr typeInt NX = 4;
 constexpr typeInt NU = 2;
 
 // Cost Weights
-constexpr typeRNum Q_POS = 5;
+constexpr typeRNum Q_POS = 4;
 constexpr typeRNum Q_THETA = 2.5;
 constexpr typeRNum Q_VEL = 0.1;
 constexpr typeRNum R_STEER = 0.7;
@@ -303,7 +303,7 @@ private:
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher 
-    grampc_setopt_int(grampc, "MaxGradIter", 3);  //4 DEFAULT 2
+    grampc_setopt_int(grampc, "MaxGradIter", 4);  //4 DEFAULT 2
     grampc_setopt_int(grampc, "MaxMultIter", 2); //2 DEFAULT 1
 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
