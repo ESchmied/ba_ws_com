@@ -34,7 +34,7 @@ const std::string outer_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_ma
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m] (Länge)
 constexpr typeRNum W = 0.3;
-constexpr typeRNum V_MAX = 2.0;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 2.5;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -48,10 +48,10 @@ constexpr typeRNum YAW_MAX = 0.4;
 constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
-// OCP Parameters dt*Nhor = Thor
+// OCP Parameters dt*(Nhor-1) = Thor
 constexpr typeRNum DT = 0.05;  //ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 51; //40
-constexpr typeRNum THOR = 2.5; //2
+constexpr typeRNum NHOR = 51; //51
+constexpr typeRNum THOR = 2.5; //2.5
 
 constexpr typeInt NX = 4;
 constexpr typeInt NU = 2;
@@ -197,45 +197,7 @@ private:
   // --------------------------
   // Compute a reference trajectory over the horizon.
   // Here, we compute a vector with Nhor * 3 elements: for each step, [x_ref, y_ref, yaw_ref].
-  /*
-  vector<double> computeReferenceTrajectory(double current_x, double current_y, int Nhor, const vector<double>& flat_points) {
-    int num_points = flat_points.size() / 2;
-    //warum nearest index =0? und nicht -1? egal 
-    int nearest_idx = 0;
-    double min_dist = numeric_limits<double>::max();
-    for (int i = 0; i < num_points; i++) {
-      double x = flat_points[2 * i];
-      double y = flat_points[2 * i + 1];
-      //euklidische distanz, maby in funktion auslagern?
-      double d = sqrt((x - current_x) * (x - current_x) + (y - current_y) * (y - current_y));
-      if (d < min_dist) {
-        min_dist = d;
-        nearest_idx = i;
-      }
-    }
-
-    vector<double> traj; // Will contain [x_ref, y_ref, yaw_ref] for each step.
-    for (int i = 0; i < Nhor; i++) {
-      int idx = nearest_idx + i;
-      if (idx >= num_points){
-        //warum num_points-1? und nicht 0
-        idx = num_points - 1;
-      }
-      double x_ref = flat_points[2 * idx];
-      double y_ref = flat_points[2 * idx + 1];
-      double yaw_ref = 0.0; //why yaw ref =0.0?
-      if (idx < num_points - 1) {
-        double x_next = flat_points[2 * (idx + 1)];
-        double y_next = flat_points[2 * (idx + 1) + 1];
-        yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
-      }
-      traj.push_back(x_ref);
-      traj.push_back(y_ref);
-      traj.push_back(yaw_ref);
-    }
-    return traj;
-  }
-    */
+ 
   
   //überladene fkt, tut exakt das gleiche nur schöner i guess
   std::vector<double> computeReferenceTrajectory(const std::vector<double>& flat_points, int nearest_idx, int num_points_ahead) {
@@ -341,12 +303,12 @@ private:
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher 
-    grampc_setopt_int(grampc, "MaxGradIter", 4);  //5 //muss kleiner sein als MulInt DEFAULT 2
-    grampc_setopt_int(grampc, "MaxMultIter", 2); //10 DEFAULT 1
+    grampc_setopt_int(grampc, "MaxGradIter", 3);  //4 DEFAULT 2
+    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 DEFAULT 1
 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
-    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25);
-    grampc_setopt_real(grampc, "PenaltyMin", 1.7);
+    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25); //works with 1.25
+    grampc_setopt_real(grampc, "PenaltyMin", 5); //works with 5
 
 
     ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
