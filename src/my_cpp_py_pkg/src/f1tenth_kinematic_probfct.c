@@ -440,7 +440,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     typeRNum distance_center = euclidian_distance(proj_ref_point, car_pos);
     typeRNum distance_border = euclidian_distance(proj_ref_point, proj_border_point);
 
-    
+    //works with 0.5 *car_width
     out[2] = POW2(distance_center) - POW2(distance_border) + 0.5*car_width; //abstand auto-centerline < abstand centerline-border - car_width 
 
 }
