@@ -6,5 +6,5 @@ CXX_FLAGS =   -Wall -Wextra -Wpedantic -std=gnu++14
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/emelies/ba_ws_com/src/my_cpp_py_pkg/include -I/home/emelies/grampc-2.2/include 
+CXX_INCLUDES = -I/home/emelies/ros_mpc_env/ba_ws_com/src/my_cpp_py_pkg/include -I/home/emelies/ros_mpc_env/grampc-2.2/include 
 

@@ -26,15 +26,15 @@ extern "C" {
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
-const std::string centerline_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
-const std::string inner_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
-const std::string outer_border_file = "/home/emelies/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
+const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
+const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
+const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m] (Länge)
 constexpr typeRNum W = 0.3;
-constexpr typeRNum V_MAX = 2;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -59,7 +59,7 @@ constexpr typeInt NU = 2;
 // Cost Weights
 constexpr typeRNum Q_POS = 4;
 constexpr typeRNum Q_THETA = 2.5;
-constexpr typeRNum Q_VEL = 0.1;
+constexpr typeRNum Q_VEL = 1;
 constexpr typeRNum R_STEER = 0.7;
 
 
@@ -306,6 +306,7 @@ private:
     grampc_setopt_int(grampc, "MaxGradIter", 4);  //4 DEFAULT 2
     grampc_setopt_int(grampc, "MaxMultIter", 2); //2 DEFAULT 1
 
+    //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
     grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25); //works with 1.25
     grampc_setopt_real(grampc, "PenaltyMin", 5); //works with 5

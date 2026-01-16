@@ -1,6 +1,6 @@
 mpc_node:
   ros__parameters:
-    waypoint_file: "/home/emelie/ba_ws_com/maps/Spielberg_map_klein_race_line.csv"
+    waypoint_file: "/home/emelie/ros_mpc_env/ba_ws_com/maps/Spielberg_map_klein_race_line.csv"
     
     # TODO: Maybe use it as a parameter that the MPC should optimize?
     considered_points: 30 # Number of reference points that are considered in one MPC step. It should match Nhor

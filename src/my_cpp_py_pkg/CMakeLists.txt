@@ -27,8 +27,8 @@ find_package(ackermann_msgs REQUIRED)
 #find_package(tf2 REQUIRED)
 
 #include grampc
-include_directories(include /home/emelies/grampc-2.2/include) #grampc.h
-link_directories(/home/emelies/grampc-2.2/libs) #libgrampc.a
+include_directories(include /home/emelies/ros_mpc_env/grampc-2.2/include) #grampc.h
+link_directories(/home/emelies/ros_mpc_env/grampc-2.2/libs) #libgrampc.a
 
 add_executable(mpc_node src/mpc_controller.cpp src/f1tenth_kinematic_probfct.c)
 ament_target_dependencies(mpc_node rclcpp nav_msgs ackermann_msgs visualization_msgs)
@@ -38,7 +38,7 @@ target_include_directories(mpc_node PUBLIC
 
 add_library(grampc_lib STATIC IMPORTED)
 set_target_properties(grampc_lib PROPERTIES
-    IMPORTED_LOCATION "/home/emelies/grampc-2.2/libs/libgrampc.a"
+    IMPORTED_LOCATION "/home/emelies/ros_mpc_env/grampc-2.2/libs/libgrampc.a"
 )
 
 target_link_libraries(mpc_node grampc_lib)
