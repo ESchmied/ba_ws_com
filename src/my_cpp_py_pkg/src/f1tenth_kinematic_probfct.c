@@ -53,16 +53,26 @@
 
 #define PI 3.14159265358979323846
 
+/* //define point struct 
+typedef struct {
+    double x;
+    double y;
+    double yaw; //not needed i think
+} my_point; */
+
 //define point struct 
 typedef struct {
     double x;
     double y;
     double yaw; //not needed i think
+    double proj;
 } my_point;
 
 
 //functions i might need 
-//get nearest  waypoint index
+
+/*  get nearest point in Waypoint or border list, relative to car pos
+    needs 3 values per point in list  */
 typeInt getNearestIndex(double current_x, double current_y, const double* ref, int ref_length) {
     //warum 0 und nicht -1? no reason
     int nearest_idx = 0;
@@ -91,6 +101,10 @@ typeRNum wrapToPi(const typeRNum number){
 }
 
 // TODO add point projection fct here?
+//einfache orthogonal proj für je drei Werte pro punkt
+//ref: list of line points
+//ref_length: length of ref
+//x: point to proj 
 my_point calculate_projected_ref_point(double* ref, int ref_length, my_point x){
 
     int nearest_idx = getNearestIndex(x.x, x.y, ref, ref_length);
@@ -132,10 +146,51 @@ my_point calculate_projected_ref_point(double* ref, int ref_length, my_point x){
 
     return ref_point;
 }
+/* calculates orthogonal projection of x on vector ab 
+für je 2 Werte pro punkt
+a: starting point vector
+b: end point vector
+x :point to be projected
+returns: global projected point and proj relative to vector
+---------------------------------------------------------------*/
 
+my_point orhtogonal_proj(my_point a, my_point b, my_point x){
+
+    // Vector entries from nearest to current position
+    double a_to_current_x = x.x - a.x;
+    double a_to_current_y = x.y - a.y;
+
+    // Normalized vector entries from nearest to next point
+    double a_to_b_x = b.x - a.x;
+    double a_to_b_y = b.y - a.y;
+
+    double a_to_b_length = sqrt(POW2(a_to_b_x) + POW2(a_to_b_y));
+    a_to_b_x /= a_to_b_length;
+    a_to_b_y /= a_to_b_length;
+
+    // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
+    //proj ist eine relative Länge von a_to_b
+    //Falls proj <0: orthogonale Projektion vor a; falls proj <1: hinter b 
+    double proj = (a_to_current_x * a_to_b_x) + (a_to_current_y * a_to_b_y); // dot(ntc, ntn)
+    
+    double x_ref = a.x + proj * a_to_b_x;
+    double y_ref = a.y + proj * a_to_b_y;
+    double yaw_ref = a.yaw;
+
+    // Result structure
+    my_point ref_point;
+
+    ref_point.x = x_ref;
+    ref_point.y = y_ref;
+    ref_point.yaw = yaw_ref;
+    ref_point.proj = proj;
+
+    return ref_point;
+}
 //vielleicht auch abstandsberechnung? transformation?
 
-//möglich als bool? x<0 or x>0
+//möglich als bool? x<0 or x>0 
+//helps decide wich border to take as boundary
 my_point transform_car_pos(my_point proj_point, my_point car_pos){
     
     double yaw_ref = proj_point.yaw;
@@ -157,6 +212,87 @@ my_point transform_car_pos(my_point proj_point, my_point car_pos){
 typeRNum euclidian_distance(my_point point1, my_point point2){
     double dist_sqrd = POW2(point1.x - point2.x) + POW2(point1.y - point2.y);
     return sqrt(dist_sqrd);
+}
+
+my_point find_proj_border_point(double* border, int border_len, my_point car_pos){
+    //find border point to compare too, might not be exact enough
+    int nearest_border_idx = getNearestIndex(car_pos.x, car_pos.y, border, border_len);
+    int prev_border_idx = (nearest_border_idx-1) %border_len;
+    int next_border_idx = (nearest_border_idx+1) %border_len;
+
+    my_point prev_border_point;
+    prev_border_point.x = border[3*prev_border_idx];
+    prev_border_point.y = border[3*prev_border_idx +1];
+
+    my_point nearest_border_point;
+    nearest_border_point.x = border[3*nearest_border_idx];
+    nearest_border_point.y = border[3*nearest_border_idx +1];
+
+    my_point next_border_point;
+    next_border_point.x = border[3*next_border_idx];
+    next_border_point.y = border[3*next_border_idx +1];
+    my_point proj_border_point;
+
+    my_point car_on_prev_to_near = orhtogonal_proj(prev_border_point, nearest_border_point, car_pos);
+    my_point car_on_near_to_next = orhtogonal_proj(nearest_border_point, next_border_point, car_pos);
+
+    if((car_on_prev_to_near.proj < 1.0) &&  (car_on_near_to_next.proj <= 0.0) ){
+        //use prev to near as reference
+        //printf("case 1: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        proj_border_point.x = car_on_prev_to_near.x;
+        proj_border_point.y = car_on_prev_to_near.y;
+        
+    }
+    else if((car_on_near_to_next.proj > 0.0) &&  (car_on_near_to_next.proj < 1.0)){
+        //use near to next as ref
+        //printf("case 2: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        proj_border_point.x = car_on_near_to_next.x;
+        proj_border_point.y = car_on_near_to_next.y;
+    } 
+    else if((car_on_prev_to_near.proj >0.0) && (car_on_prev_to_near.proj < 1.0 )&& (car_on_near_to_next.proj >=1.0)){
+        //use prev to near
+        //printf("case 3: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        proj_border_point.x = car_on_prev_to_near.x;
+        proj_border_point.y = car_on_prev_to_near.y;
+    }
+    else if((car_on_prev_to_near.proj >= 1.0) && (car_on_near_to_next.proj <= 0.0)){
+        //use z_achse des kreuzproduktes
+        //printf("case 4: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        double car_to_next_proj_x = car_on_near_to_next.x - car_pos.x;
+        double car_to_next_proj_y = car_on_near_to_next.y - car_pos.y;
+        double near_to_next_x = next_border_point.x - nearest_border_point.x;
+        double near_to_next_y = next_border_point.y - nearest_border_point.y;
+        //(near_to_next x car_to_proj_point).z 
+        double cross_z =  near_to_next_x * car_to_next_proj_y - near_to_next_y *car_to_next_proj_x;
+        //printf("cross z=  %f  \n", cross_z);
+        //notsure ob die richtung stimmt 
+        if (cross_z < 0.0){
+            proj_border_point.x = car_on_prev_to_near.x;
+            proj_border_point.y = car_on_prev_to_near.y;
+        }
+        //(near_to_next x car_to_proj_point).z >0 => use next
+        else{
+            proj_border_point.x = car_on_near_to_next.x;
+            proj_border_point.y = car_on_near_to_next.y;
+        }
+    }
+    else if( (car_on_prev_to_near.proj >=1.0) && (car_on_near_to_next.proj >=1.0)){
+        //use next
+        //printf("case 5: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        proj_border_point.x = car_on_near_to_next.x;
+        proj_border_point.y = car_on_near_to_next.y;
+    }
+    else if((car_on_prev_to_near.proj <=0.0) && (car_on_near_to_next.proj>=1.0) ){
+        //should not happen but if just use next 
+        //printf("case 6: proj on prev =  %f and proj on next= %f \n", car_on_prev_to_near.proj, car_on_near_to_next.proj);
+        proj_border_point.x = car_on_near_to_next.x;
+        proj_border_point.y = car_on_near_to_next.y;
+    }
+    else{
+        printf("new case not yet handled");
+    }
+
+    return proj_border_point;
 }
 
 
@@ -408,40 +544,70 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     my_point car_pos;
     car_pos.x = x[0];
     car_pos.y = x[1]; 
-    //yaw can be left empty?
+    //yaw can be left empty 
 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
     out[0] = x[3] - param->max_velocity;    // v <= v_max   
     out[1] = -x[3];                         // 0 <= v
 
-    //border constraint
+    //border constraint 
     //project car pos onto centerline
-    my_point proj_ref_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
 
-    my_point transformed_car_pos = transform_car_pos(proj_ref_point, car_pos);
+    int nearest_center_idx = getNearestIndex(car_pos.x, car_pos.y,  center_traj, center_traj_len);
+    // Coords of nearest point
+    my_point nearest_center_point;
+    nearest_center_point.x = center_traj[3*nearest_center_idx];
+    nearest_center_point.y = center_traj[3*nearest_center_idx + 1];
 
-    if(transformed_car_pos.x > 0){
+    my_point next_center_point;
+    next_center_point.x = center_traj[3*(nearest_center_idx+1)];
+    next_center_point.y = center_traj[3*(nearest_center_idx+1)+1];
+
+    my_point proj_center_point = orhtogonal_proj(nearest_center_point, next_center_point, car_pos);
+    
+    //use z_wert des kreuzproduktes stattdessen 
+    double near_to_next_center_x = next_center_point.x - nearest_center_point.x;
+    double near_to_next_center_y = next_center_point.y - nearest_center_point.y;
+
+    double car_to_proj_center_point_x = proj_center_point.x - car_pos.x;
+    double car_to_proj_center_point_y = proj_center_point.y - car_pos.y;
+    //cross product near_to_next x car_to_proj
+    double cross_z = near_to_next_center_x * car_to_proj_center_point_y - near_to_next_center_y *car_to_proj_center_point_x;
+
+
+    //why smaller then 0? 
+    if(cross_z > 0){
         //choose outer border
         border = outer_border;
         border_len = outer_border_len;
+        //printf("outer_border as reference\n");
     }
     else{
         //choose inner border
-        //even if same, because ots gonna be more often the inner border thats the problem, because of time optimization
+        //even if same, because its gonna be more often the inner border thats the problem, because of time optimization
         border = inner_border;
         border_len = inner_border_len;
+        //printf("inner_border as reference\n");
     }
+
+    my_point proj_border_point = find_proj_border_point(border, border_len, car_pos);
     
-    //find border point to compare too, might not be exact enough
-    my_point proj_border_point = calculate_projected_ref_point(border, border_len, proj_ref_point);
+    //printf("proj_border_point = %f, %f \n", proj_border_point.x, proj_border_point.y);
+   
+    /* vergleich muss mit proj_center_car erfolgen, 
+    um abschätzen zu können, ob win der strecke oder außerhalb sind 
+    */
+    //calculate distance between proj_center_point und proj_border_point  
+    
 
-    //calculate distance between proj_ref_point und x 
-    typeRNum distance_center = euclidian_distance(proj_ref_point, car_pos);
-    typeRNum distance_border = euclidian_distance(proj_ref_point, proj_border_point);
-
+    typeRNum distance_border_center = euclidian_distance(proj_border_point, proj_center_point);
+    typeRNum distance_center_car = euclidian_distance(proj_center_point, car_pos);
+    //printf("distance_border_center = %f ", distance_border_center );
+    //printf("distance_center_car = %f\n", distance_center_car);
     //works with 0.5 *car_width
-    out[2] = POW2(distance_center) - POW2(distance_border) + 0.5*car_width; //abstand auto-centerline < abstand centerline-border - car_width 
+    //das kleinere minus das größere
+    out[2] = POW2(distance_center_car) - POW2(distance_border_center) + car_width; //abstand auto-centerline < abstand centerline-border - car_width 
 
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
@@ -453,16 +619,26 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     double* center_traj = param->center_traj;
     int center_traj_len = param->center_traj_len;
 
+    double* outer_border = param->outer_border;
+    int outer_border_len = param->outer_border_len;
+
+    double* inner_border = param->inner_border;
+    int inner_border_len = param->inner_border_len;
+
+    double* border;
+    int border_len;
+
+
     my_point car_pos;
     car_pos.x = x[0];
     car_pos.y = x[1]; 
 
     //project car pos onto centerline
-    my_point proj_ref_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
+    my_point proj_center_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
 
     //ableitung h nach x mal vector (but why?)
-    out[0] = -2* (proj_ref_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
-    out[1] = -2* (proj_ref_point.y - x[1])* vec[2];
+    out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    out[1] = -2* (proj_center_point.y - x[1])* vec[2];
     out[2] = 0;
     out[3] = vec[0] - vec[1]; //reine optimierung kommt vom gradient based mpc
 

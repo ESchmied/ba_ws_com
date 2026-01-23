@@ -34,7 +34,7 @@ const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        // [m] (Länge)
 constexpr typeRNum W = 0.3;
-constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 4;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -74,7 +74,11 @@ public:
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
     flat_center_points_ = load_flat_pathpoints(centerline_file);
     flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
+    //for ease of programming in probfct
+    flat_inner_border_points_3d = convertPointsToTrajectory(flat_inner_border_points_);
     flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
+    flat_outer_border_points_3d = convertPointsToTrajectory(flat_outer_border_points_);
+    
 
     // Set user parameters 
     user_param_.dt = DT;
@@ -114,9 +118,9 @@ public:
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
-    inner_border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("inner_border", 10);
-    outer_border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("outer_border", 10);
-
+    border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("border_points", 10);
+    border_line_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("border_line", 10);
+    
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
     next_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
@@ -142,10 +146,11 @@ private:
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr border_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr next_point_publisher_;
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr inner_border_publisher_;
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr outer_border_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr border_line_publisher_;
+ 
   
 
   // GRAMPC pointer
@@ -158,6 +163,9 @@ private:
   //Flat border points for (each point stored as [x,y])
   vector<double> flat_inner_border_points_;
   vector<double> flat_outer_border_points_;
+
+  vector<double> flat_inner_border_points_3d;
+  vector<double> flat_outer_border_points_3d;
 
 
   // This member holds the computed reference trajectory (flattened), i.e. for each prediction step: [x_ref, y_ref, yaw_ref]
@@ -213,7 +221,8 @@ private:
         int next_idx = (idx + 1) % num_points; //if abfrage wird unnötig da modulo 
         double x_next = flat_points[2 * next_idx];
         double y_next = flat_points[2 * next_idx + 1];
-        
+        //gibt pos yaw ref von pos x-Achse richtung pos Y-Achse 
+        //atan2(y,x)
         double yaw_ref = atan2(y_next - y_ref, x_next - x_ref);
 
         traj.push_back(x_ref);
@@ -309,7 +318,7 @@ private:
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
     grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25); //works with 1.25
-    grampc_setopt_real(grampc, "PenaltyMin", 5); //works with 5
+    grampc_setopt_real(grampc, "PenaltyMin", 7); //works with 5
 
 
     ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
@@ -368,11 +377,12 @@ private:
     //update border of user param
     //auto outer_border = load_flat_pathpoints(outer_border_file);
     //auto inner_border = load_flat_pathpoints(inner_border_file);
-    user_param_.outer_border = flat_outer_border_points_.data();
-    user_param_.outer_border_len = (int)flat_outer_border_points_.size()/2;
+    
+    user_param_.outer_border = flat_outer_border_points_3d.data();
+    user_param_.outer_border_len = (int)flat_outer_border_points_3d.size()/3;
 
-    user_param_.inner_border = flat_inner_border_points_.data();
-    user_param_.inner_border_len = (int)flat_inner_border_points_.size()/2;
+    user_param_.inner_border = flat_inner_border_points_3d.data();
+    user_param_.inner_border_len = (int)flat_inner_border_points_3d.size()/3;
 
     grampc->userparam = static_cast<void*>(&user_param_);
 
@@ -493,7 +503,7 @@ private:
       p.z = 0.1;    //line is floating a bit over ground
       border.points.push_back(p);
     }
-    reference_publisher_->publish(border);
+    border_line_publisher_->publish(border);
   }
 
   //publish waypoints warum verschwinden die punkte hinter dem auto wieder
@@ -551,7 +561,7 @@ private:
       point.pose.position.z = 0.1; //points are floating a bit over ground
       marker_array.markers.push_back(point);
     }
-    active_ref_publisher_->publish(marker_array);
+    border_publisher_->publish(marker_array);
   }
 
   void publish_single_point(string ns , double x, double y){

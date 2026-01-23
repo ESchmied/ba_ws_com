@@ -54,16 +54,16 @@ typedef struct{
     // Others
     double centerline_dist;
     bool soft_constraints;
-    //ref traj = way points
+    //ref traj = way points x,y,yaw
     double* ref_traj;
     int ref_length;
-    //centerline for border contraint
+    //centerline for border contraint x,y,yaw
     double* center_traj;
     int center_traj_len;
-    //inner border
+    //inner border x,y,yaw
     double* inner_border;
     int inner_border_len;
-    //outer border
+    //outer border x,y,yaw
     double* outer_border;
     int outer_border_len;
 
