@@ -4,7 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/foxy/**"
+                "/opt/ros/foxy/**",
+                "/home/emelies/grampc-2.2/**",
+                "${workspaceFolder}/src/my_cpp_py_pkg/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

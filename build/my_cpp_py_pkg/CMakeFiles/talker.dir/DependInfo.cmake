@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/emelie/ba_ws_com/src/my_cpp_py_pkg/src/publisher_member_function.cpp" "/home/emelie/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/talker.dir/src/publisher_member_function.cpp.o"
+  "/home/emelies/ros_mpc_env/ba_ws_com/src/my_cpp_py_pkg/src/publisher_member_function.cpp" "/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/talker.dir/src/publisher_member_function.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -17,6 +17,8 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
+  "/home/emelies/ros_mpc_env/ba_ws_com/src/my_cpp_py_pkg/include"
+  "/home/emelies/ros_mpc_env/grampc-2.2/include"
   "/opt/ros/foxy/include"
   )
 

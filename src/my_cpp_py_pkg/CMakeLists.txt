@@ -17,15 +17,36 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# add further dependencies manually.
+# add further dependencies manually
 #find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(ackermann_msgs REQUIRED)
-find_package(tf2 REQUIRED)
+#find_package(tf2 REQUIRED)
 
+#include grampc
+include_directories(include /home/emelies/ros_mpc_env/grampc-2.2/include) #grampc.h
+link_directories(/home/emelies/ros_mpc_env/grampc-2.2/libs) #libgrampc.a
+
+add_executable(mpc_node src/mpc_controller.cpp src/f1tenth_kinematic_probfct.c)
+ament_target_dependencies(mpc_node rclcpp nav_msgs ackermann_msgs visualization_msgs)
+target_include_directories(mpc_node PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+add_library(grampc_lib STATIC IMPORTED)
+set_target_properties(grampc_lib PROPERTIES
+    IMPORTED_LOCATION "/home/emelies/ros_mpc_env/grampc-2.2/libs/libgrampc.a"
+)
+
+target_link_libraries(mpc_node grampc_lib)
+
+install(TARGETS 
+    mpc_node
+    DESTINATION lib/${PROJECT_NAME})
+    
 
 add_executable(talker src/publisher_member_function.cpp)
 ament_target_dependencies(talker rclcpp std_msgs)
