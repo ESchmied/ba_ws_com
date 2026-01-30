@@ -32,9 +32,9 @@ const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/
 const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
-constexpr typeRNum L = 0.33;        // [m] (Länge)
-constexpr typeRNum W = 0.3;
-constexpr typeRNum V_MAX = 4;     // [m/s] ursprünglich 2
+constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
+constexpr typeRNum W = 0.31;
+constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -49,18 +49,18 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
-constexpr typeRNum DT = 0.05;  //ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 51; //51
-constexpr typeRNum THOR = 2.5; //2.5
+constexpr typeRNum DT = 0.05;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 26; //51
+constexpr typeRNum THOR = 1.3; //2.5
 
-constexpr typeInt NX = 4;
-constexpr typeInt NU = 2;
+constexpr typeInt NX = 4; //x,y,yaw,v
+constexpr typeInt NU = 2; // steer, a
 
 // Cost Weights
-constexpr typeRNum Q_POS = 4;
-constexpr typeRNum Q_THETA = 2.5;
-constexpr typeRNum Q_VEL = 1;
-constexpr typeRNum R_STEER = 0.7;
+constexpr typeRNum Q_POS = 0.5; //0.5
+constexpr typeRNum Q_THETA = 0.3; //0.3
+constexpr typeRNum Q_VEL = 0.1; //0.1
+constexpr typeRNum R_STEER = 0.02; //0.02
 
 
 
@@ -88,6 +88,7 @@ public:
     user_param_.R_steer = R_STEER;
  
     user_param_.wheelbase = L; //abstand vorderachse und hinter achse
+    user_param_.width = W;
     user_param_.max_velocity = V_MAX;
     
     // Log the loaded waypoints and trajectory
@@ -123,8 +124,8 @@ public:
     
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
-    next_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
-    
+    single_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
+
     // Initialize GRAMPC
     init_grampc();
   }
@@ -148,9 +149,9 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr border_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
-  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr next_point_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr border_line_publisher_;
- 
+
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr single_point_publisher_;
   
 
   // GRAMPC pointer
@@ -170,6 +171,8 @@ private:
 
   // This member holds the computed reference trajectory (flattened), i.e. for each prediction step: [x_ref, y_ref, yaw_ref]
   vector<double> ref_traj_;
+
+  int infeasible_counter = 0;
 
   // Store the user parameters to pass to grampc
   UserParam user_param_;
@@ -267,7 +270,7 @@ private:
   //for flat lists [x,y] 
   typeInt getNearestIndex(double current_x, double current_y, const vector<double>& flat_points){
     int num_points = flat_points.size() / 2;
-    int nearest_idx = -1; // or -1 to make sure its not on the list already
+    int nearest_idx = 0; // or -1 to make sure its not on the list already
     double min_dist = numeric_limits<double>::max();
     for (int i = 0; i < num_points; i++) {
       double x = flat_points[2 * i];
@@ -305,23 +308,27 @@ private:
     grampc_setopt_int(grampc, "Nhor", NHOR);
     grampc_setparam_real(grampc, "Thor", THOR);
 
-    //Important!! Without it the car drives serpentine-like
-    grampc_setopt_string(grampc, "ShiftControl", "on");
+    //Important!! Without it the car drives serpentine-like 
+    //works without too, but is not as smooth
+    grampc_setopt_string(grampc, "ShiftControl", "on");  //on
 
     //maby only in v2.3
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
-    // Set number of gradient iterations (example) mein Laptop kommt nicht hinterher 
-    grampc_setopt_int(grampc, "MaxGradIter", 4);  //4 DEFAULT 2
-    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 DEFAULT 1
+    // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
+    grampc_setopt_int(grampc, "MaxGradIter", 8);  //7 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
-    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.25); //works with 1.25
-    grampc_setopt_real(grampc, "PenaltyMin", 7); //works with 5
+    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.05); //works with 1.05
+    grampc_setopt_real(grampc, "PenaltyMin", 1); //works with 1
 
 
-    ctypeRNum ConstraintsAbsTol[1] = { 1e-2 };
+
+    //tolerance for the constraints,
+    //all constraints are satisfied within the tolerance defined by ConstraintsAbsTol
+    ctypeRNum ConstraintsAbsTol[1] = { 0 }; //1e-2 works with 0
     grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
   }
 
@@ -394,20 +401,33 @@ private:
     // grampc_setparam_real(grampc, "t0", t);
 
     // Run GRAMPC.
-    RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
+    //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
     grampc_run(grampc);
     RCLCPP_INFO(this->get_logger(), "Finished GRAMPC run. Status %d", grampc->sol->status);
+    grampc_printstatus(grampc->sol->status, STATUS_LEVEL_DEBUG);
 
+
+    bool infeasible_flag = grampc->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
+
+    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde ist 
+    infeasible_counter += infeasible_flag;
+    printf("infeasible_counter: %d \n", infeasible_counter);
+
+    bool infeasible = infeasible_counter > 10; //>20 works for driving Only set if the flag was active for multiple runs
+
+ 
     //publish after Grampc run to avoid interfering with the data update
-    publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);  
-    publish_single_point("car_pos", x, y);
+    //publish_single_point("proj_center_point", user_param_.proj_center_point_x, user_param_.proj_center_point_y);  
+    //publish_single_point("proj_border_point", user_param_.proj_border_point_x, user_param_.proj_border_point_y);
+    //publish_single_point("next_point", user_param_.car_pos_x, user_param_.car_pos_y);
+
 
 
     // Extract control command.
     double steering_angle = grampc->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
     double acceleration = grampc->sol->unext[1];
     double v_next = grampc->sol->xnext[3]; // Extract the velocity state of the next solution step
-    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%2.f", steering_angle, v_next, acceleration);
+    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
 
     // for (int i = 0; i < NHOR; ++i)
     // {
@@ -420,7 +440,7 @@ private:
     //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
     // }
     
-    if (isnan(v_next) || isnan(steering_angle)){ //what does is nan? nan ^= not-a-number
+    if (isnan(v_next) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = 0.0;
       drive_msg.drive.steering_angle = 0.0;
@@ -442,6 +462,7 @@ private:
     publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
     publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
 
+    publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);
 
     publish_border("inner_border_line", flat_inner_border_points_);
     publish_border("outer_border_line", flat_outer_border_points_);
@@ -590,7 +611,7 @@ private:
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
 
-    next_point_publisher_->publish(marker);
+    single_point_publisher_->publish(marker);
   }
 };
 

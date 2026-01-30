@@ -67,6 +67,14 @@ typedef struct{
     double* outer_border;
     int outer_border_len;
 
+    //for debugging 
+    double proj_border_point_x;
+    double proj_border_point_y;
+    double proj_center_point_x;
+    double proj_center_point_y;
+    double car_pos_x;
+    double car_pos_y;
+
 } UserParam;
 
 #ifdef __cplusplus

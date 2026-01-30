@@ -101,7 +101,7 @@ typeRNum wrapToPi(const typeRNum number){
 }
 
 // TODO add point projection fct here?
-//einfache orthogonal proj für je drei Werte pro punkt
+/* //einfache orthogonal proj für je drei Werte pro punkt
 //ref: list of line points
 //ref_length: length of ref
 //x: point to proj 
@@ -145,7 +145,9 @@ my_point calculate_projected_ref_point(double* ref, int ref_length, my_point x){
     ref_point.yaw = yaw_ref;
 
     return ref_point;
-}
+} */
+
+
 /* calculates orthogonal projection of x on vector ab 
 für je 2 Werte pro punkt
 a: starting point vector
@@ -292,6 +294,7 @@ my_point find_proj_border_point(double* border, int border_len, my_point car_pos
         printf("new case not yet handled");
     }
 
+    
     return proj_border_point;
 }
 
@@ -304,7 +307,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
     *Nx = 4;    //Number of states [x, y, yaw, v]
     *Nu = 2;    //Number of controls [steering, acceleration]
     *Np = 0;    //Number of paramters
-    *Nh = 3;    //Number of inequalities (maby 1?)
+    *Nh = 2;    //Number of inequalities (eigenltich 3)
     *Ng = 0;    //Number of equalities
     *NgT = 0;
     *NhT = 0;
@@ -312,7 +315,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
 }
 
 //was ist out?
-//why no typeGrampcparam -<v.2.2
+//why no typeGrampcparam -> v.2.2
 /** System function f(t,x,u,p,param,userparam) 
     ------------------------------------ **/
 void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
@@ -324,7 +327,6 @@ void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     out[1] = x[3] * SIN(x[2]);            // dy/dt = v * sin(theta)
     out[2] = (x[3] / L) * TAN(u[0]);      // dtheta/dt = v / L * tan(steering)
     out[3] = u[1];                        // dv/dt = a
-
 }
 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
@@ -334,7 +336,7 @@ void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
 
-    out[0] = 0.0;
+    out[0] = 0.0; //ableitung nach X[0]
     out[1] = 0.0;
     out[2] = -x[3] * SIN(x[2]) * vec[0] + x[3] * COS(x[2]) * vec[1];                //-v*sin(theta)*vec[0] + v*cos(theta)*vec[1]
     out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;      //vec[0]*cos(theta) + vec[1]*sin(theta) + vec[2]*tan(steering_angle)/L
@@ -349,8 +351,8 @@ void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
 
-    out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //= (v/L) *(1/COS(steering)^2) *vec[2]
-    out[1] = vec[3];                                        //= vec[3]
+    out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
+    out[1] = vec[3];                                        //a = 1*vec[3]
 
 }
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
@@ -529,7 +531,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     double* center_traj = param->center_traj;
     int center_traj_len = param->center_traj_len;
     
-    int car_width = param->width;
+    double car_width = param->width;
 
     double* outer_border = param->outer_border;
     int outer_border_len = param->outer_border_len;
@@ -548,8 +550,8 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
-    out[0] = x[3] - param->max_velocity;    // v <= v_max   
-    out[1] = -x[3];                         // 0 <= v
+    out[0] = x[3] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
+    //out[1] = -x[3];                         // 0 <= v
 
     //border constraint 
     //project car pos onto centerline
@@ -592,22 +594,24 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     }
 
     my_point proj_border_point = find_proj_border_point(border, border_len, car_pos);
-    
+   
     //printf("proj_border_point = %f, %f \n", proj_border_point.x, proj_border_point.y);
    
     /* vergleich muss mit proj_center_car erfolgen, 
-    um abschätzen zu können, ob win der strecke oder außerhalb sind 
+    um abschätzen zu können, ob wir in der strecke oder außerhalb sind 
     */
     //calculate distance between proj_center_point und proj_border_point  
-    
-
     typeRNum distance_border_center = euclidian_distance(proj_border_point, proj_center_point);
     typeRNum distance_center_car = euclidian_distance(proj_center_point, car_pos);
-    //printf("distance_border_center = %f ", distance_border_center );
-    //printf("distance_center_car = %f\n", distance_center_car);
-    //works with 0.5 *car_width
+    //if((distance_border_center ) <=  distance_center_car){
+       //printf("pos contraint not satisfied! distance_border_center = %f, distance_center_car = %f\n", distance_border_center,  distance_center_car);
+    //}
+    //printf("car_width: %f\n" , car_width);
+    
     //das kleinere minus das größere
-    out[2] = POW2(distance_center_car) - POW2(distance_border_center) + car_width; //abstand auto-centerline < abstand centerline-border - car_width 
+    out[1] = POW2(distance_center_car) - POW2(distance_border_center - car_width); //abstand auto-centerline < abstand centerline-border - car_width 
+    //out[2] = distance_center_car - (distance_border_center - car_width );
+    //out[2] = distance_center_car - 0.5; //probe weise Schlauch um die centerline als Constraint
 
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
@@ -634,13 +638,32 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     car_pos.y = x[1]; 
 
     //project car pos onto centerline
-    my_point proj_center_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
+    //my_point proj_center_point = calculate_projected_ref_point(center_traj, center_traj_len, car_pos);
+
+    int nearest_center_idx = getNearestIndex(car_pos.x, car_pos.y,  center_traj, center_traj_len);
+    // Coords of nearest point
+    my_point nearest_center_point;
+    nearest_center_point.x = center_traj[3*nearest_center_idx];
+    nearest_center_point.y = center_traj[3*nearest_center_idx + 1];
+
+    my_point next_center_point;
+    next_center_point.x = center_traj[3*(nearest_center_idx+1)];
+    next_center_point.y = center_traj[3*(nearest_center_idx+1)+1];
+
+    my_point proj_center_point = orhtogonal_proj(nearest_center_point, next_center_point, car_pos);
 
     //ableitung h nach x mal vector (but why?)
-    out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
-    out[1] = -2* (proj_center_point.y - x[1])* vec[2];
+    //output sortiert nach der X[] variable die abgeleitet wird out[0] ^= x[0]'
+    //ableitung für quadrierte Contraints
+    out[0] = -2* (proj_center_point.x - x[0])* vec[1]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    out[1] = -2* (proj_center_point.y - x[1])* vec[1];
+
+    //ableitung der normalen Constraints
+    //out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[2];
+    //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
+   
     out[2] = 0;
-    out[3] = vec[0] - vec[1]; //reine optimierung kommt vom gradient based mpc
+    out[3] = vec[0]; //- vec[1]; //reine optimierung kommt vom gradient based mpc
 
 }
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/
