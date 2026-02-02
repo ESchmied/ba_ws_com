@@ -35,6 +35,7 @@ const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
 constexpr typeRNum W = 0.31;
 constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MIN = -3; //todo include in userparam
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -50,8 +51,8 @@ constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
 constexpr typeRNum DT = 0.05;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 11; //51
-constexpr typeRNum THOR = 0.55; //2.5
+constexpr typeRNum NHOR = 26; //51
+constexpr typeRNum THOR = 1.3; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -60,16 +61,15 @@ constexpr typeInt NU = 2; // steer, a
 constexpr typeRNum Q_POS = 0.5; //0.5
 constexpr typeRNum Q_THETA = 0.3; //0.3
 constexpr typeRNum Q_VEL = 0.1; //0.1
-constexpr typeRNum R_STEER = 0.1; //0.02
-constexpr typeRNum R_ACCEL = 0.02;
+constexpr typeRNum R_STEER = 0.02; //0.02
 
 
 
 // In your header or class definition:  
 class MPCNode : public rclcpp::Node {
 public:
-  MPCNode() : Node("mpc_node") {
-    RCLCPP_INFO(this->get_logger(), "MPCNode initialized");
+  MPCNode() : Node("mpc_node2") {
+    RCLCPP_INFO(this->get_logger(), "MPCNode2 initialized");
 
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
@@ -87,7 +87,6 @@ public:
     user_param_.Q_theta = Q_THETA;
     user_param_.Q_vel = Q_VEL;
     user_param_.R_steer = R_STEER;
-    user_param_.R_accel = R_ACCEL;
  
     user_param_.wheelbase = L; //abstand vorderachse und hinter achse
     user_param_.width = W;
@@ -296,9 +295,9 @@ private:
     grampc_init(&grampc, userparam);
 
     // Set initial state and control limits
-    ctypeRNum x0[NX] = { 0.0, 0.0, 0.0 , 0.0};
-    ctypeRNum umin[NU] = {YAW_MIN, A_MIN};
-    ctypeRNum umax[NU] = {YAW_MAX, A_MAX};
+    ctypeRNum x0[NX] = { 0.0, 0.0, 0.0};
+    ctypeRNum umin[NU] = {YAW_MIN, V_MIN};
+    ctypeRNum umax[NU] = {YAW_MAX, V_MAX};
 
     grampc_setparam_real_vector(grampc, "x0", x0);
     grampc_setparam_real_vector(grampc, "umin", umin);
@@ -319,7 +318,7 @@ private:
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
     grampc_setopt_int(grampc, "MaxGradIter", 8);  //7 //4 DEFAULT 2 //inner loop 
-    grampc_setopt_int(grampc, "MaxMultIter", 3); //2 //2 DEFAULT 1 //outer loop
+    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
@@ -396,7 +395,7 @@ private:
     grampc->userparam = static_cast<void*>(&user_param_);
 
     // Update current state.
-    ctypeRNum x0[NX] = { x, y, yaw, v};
+    ctypeRNum x0[NX] = { x, y, yaw};
     grampc_setparam_real_vector(grampc, "x0", x0);
 
     // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
@@ -427,9 +426,9 @@ private:
 
     // Extract control command.
     double steering_angle = grampc->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-    double acceleration = grampc->sol->unext[1];
-    double v_next = grampc->sol->xnext[3]; // Extract the velocity state of the next solution step
-    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
+    double velocity = grampc->sol->unext[1];
+    //double v_next = grampc->sol->xnext[3]; // Extract the velocity state of the next solution step
+    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f", steering_angle, velocity);
 
     // for (int i = 0; i < NHOR; ++i)
     // {
@@ -442,7 +441,7 @@ private:
     //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
     // }
     
-    if (isnan(v_next) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
+    if (isnan(velocity) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = 0.0;
       drive_msg.drive.steering_angle = 0.0;
@@ -455,7 +454,7 @@ private:
 
     // Publish control command.
     auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-    drive_msg.drive.speed = v_next;
+    drive_msg.drive.speed = velocity;
     drive_msg.drive.steering_angle = steering_angle;
     drive_publisher_->publish(drive_msg);
 

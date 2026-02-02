@@ -304,8 +304,8 @@ my_point find_proj_border_point(double* border, int border_len, my_point car_pos
     inequalities (Nh), terminal equalities (NgT), terminal inequalities (NhT) **/
 void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT, typeUSERPARAM *userparam)
 {
-    *Nx = 4;    //Number of states [x, y, yaw, v]
-    *Nu = 2;    //Number of controls [steering, acceleration]
+    *Nx = 3;    //Number of states [x, y, yaw]
+    *Nu = 2;    //Number of controls [steering, velocity]
     *Np = 0;    //Number of paramters
     *Nh = 2;    //Number of inequalities (eigenltich 3)
     *Ng = 0;    //Number of equalities
@@ -323,10 +323,9 @@ void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     UserParam* param = (UserParam*) userparam;
     double L = param->wheelbase; //abstand vorder radachse hintere Radachse
 
-    out[0] = x[3] * COS(x[2]);            //dx/dt =v*cos(theta)
-    out[1] = x[3] * SIN(x[2]);            // dy/dt = v * sin(theta)
-    out[2] = (x[3] / L) * TAN(u[0]);      // dtheta/dt = v / L * tan(steering)
-    out[3] = u[1];                        // dv/dt = a
+    out[0] = u[1] * COS(x[2]);            //dx/dt =v*cos(theta)
+    out[1] = u[1] * SIN(x[2]);            // dy/dt = v * sin(theta)
+    out[2] = (u[1] / L) * TAN(u[0]);      // dtheta/dt = v / L * tan(steering)
 }
 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
@@ -338,8 +337,8 @@ void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
 
     out[0] = 0.0; //ableitung nach X[0]
     out[1] = 0.0;
-    out[2] = -x[3] * SIN(x[2]) * vec[0] + x[3] * COS(x[2]) * vec[1];                //-v*sin(theta)*vec[0] + v*cos(theta)*vec[1]
-    out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;      //vec[0]*cos(theta) + vec[1]*sin(theta) + vec[2]*tan(steering_angle)/L
+    out[2] =-u[1] * SIN(x[2]) * vec[0] + u[1] * COS(x[2]) * vec[1];                //-v*sin(theta)*vec[0] + v*cos(theta)*vec[1]
+    //out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;      //vec[0]*cos(theta) + vec[1]*sin(theta) + vec[2]*tan(steering_angle)/L
 
     //t wird nicht verwendet?
     //printf("dfdx: yaw=%.3f, v=%3.f, vec0=%.3f, vec1=%.3f, vec2=%.3f \n", x[2], x[3], vec[0], vec[1], vec[2]);
@@ -351,8 +350,8 @@ void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
 
-    out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
-    out[1] = vec[3];                                        //a = 1*vec[3]
+    out[0] = (u[1] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
+    out[1] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;                                        //a = 1*vec[3]
 
 }
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
@@ -408,9 +407,8 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //cost function
     out[0] =  param->Q_pos   * (POW2(x[0] - x_ref) + POW2(x[1] - y_ref)) //cte 
             + param->Q_theta * POW2(wrapToPi(x[2] - yaw_ref)) //heading error
-            + param->Q_vel   * POW2(x[3] - param->max_velocity) //velocity error
-            + param->R_steer * POW2(u[0]) //steering error to avoid jittering
-            + param->R_accel * POW2(u[1]); // R_accel may be 0  
+            + param->Q_vel   * POW2(u[1] - param->max_velocity) //velocity error
+            + param->R_steer * POW2(u[0]);  //steering error to avoid jittering
             // No term for acceleration yet todo 
             
     //printf("x_ref: %.3f, y_ref: %.3f, yaw_ref: %.3f , yaw: %.3f \n",x_ref,y_ref,yaw_ref, x[2]);
@@ -463,7 +461,7 @@ void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     out[0] = param->Q_pos   * 2.0 * (x[0] - x_ref);
     out[1] = param->Q_pos   * 2.0 * (x[1] - y_ref);
     out[2] = param->Q_theta * 2.0 * (wrapToPi(x[2] - yaw_ref));
-    out[3] = param->Q_vel   * 2.0 * (x[3] - param->max_velocity); 
+    out[3] = param->Q_vel   * 2.0 * (u[1] - param->max_velocity); 
 
 }
 /** Gradient dl/du **/
@@ -551,7 +549,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
-    out[0] = x[3] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
+    out[0] = u[1] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
     //out[1] = -x[3];                         // 0 <= v
 
     //border constraint 
@@ -664,12 +662,14 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
    
     out[2] = 0;
-    out[3] = vec[0]; //- vec[1]; //reine optimierung kommt vom gradient based mpc
+    //out[3] = vec[0]; //- vec[1]; //reine optimierung kommt vom gradient based mpc
 
 }
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/
 void dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
 {
+    out[0] = 0;
+    out[1] = vec[0];
 }
 /** Jacobian dh/dp multiplied by vector vec, i.e. (dh/dp)^T*vec or vec^T*(dg/dp) **/
 void dhdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)

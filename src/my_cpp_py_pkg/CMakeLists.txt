@@ -36,15 +36,25 @@ target_include_directories(mpc_node PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
+add_executable(mpc_node2 src/mpc_controller_v_as_input.cpp src/f1tenth_kinematic_probfct_v_as_input.c)
+ament_target_dependencies(mpc_node2 rclcpp nav_msgs ackermann_msgs visualization_msgs)
+target_include_directories(mpc_node2 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+
 add_library(grampc_lib STATIC IMPORTED)
 set_target_properties(grampc_lib PROPERTIES
     IMPORTED_LOCATION "/home/emelies/ros_mpc_env/grampc-2.2/libs/libgrampc.a"
 )
 
 target_link_libraries(mpc_node grampc_lib)
+target_link_libraries(mpc_node2 grampc_lib)
+
 
 install(TARGETS 
     mpc_node
+    mpc_node2
     DESTINATION lib/${PROJECT_NAME})
     
 

@@ -56,6 +56,18 @@ CMAKE_BINARY_DIR = /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
 # Special rule for the target install/strip
 install/strip: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
@@ -123,18 +135,6 @@ edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
 
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
-
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
-
 # The main all target
 all: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/progress.marks
@@ -192,6 +192,19 @@ mpc_node: cmake_check_build_system
 mpc_node/fast:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/build
 .PHONY : mpc_node/fast
+
+#=============================================================================
+# Target rules for targets named mpc_node2
+
+# Build rule for target.
+mpc_node2: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 mpc_node2
+.PHONY : mpc_node2
+
+# fast build rule for target.
+mpc_node2/fast:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/build
+.PHONY : mpc_node2/fast
 
 #=============================================================================
 # Target rules for targets named talker
@@ -285,6 +298,33 @@ src/f1tenth_kinematic_probfct.c.s:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/src/f1tenth_kinematic_probfct.c.s
 .PHONY : src/f1tenth_kinematic_probfct.c.s
 
+src/f1tenth_kinematic_probfct_v_as_input.o: src/f1tenth_kinematic_probfct_v_as_input.c.o
+
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.o
+
+# target to build an object file
+src/f1tenth_kinematic_probfct_v_as_input.c.o:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.o
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.o
+
+src/f1tenth_kinematic_probfct_v_as_input.i: src/f1tenth_kinematic_probfct_v_as_input.c.i
+
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.i
+
+# target to preprocess a source file
+src/f1tenth_kinematic_probfct_v_as_input.c.i:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.i
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.i
+
+src/f1tenth_kinematic_probfct_v_as_input.s: src/f1tenth_kinematic_probfct_v_as_input.c.s
+
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.s
+
+# target to generate assembly for a file
+src/f1tenth_kinematic_probfct_v_as_input.c.s:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.s
+.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.s
+
 src/mpc_controller.o: src/mpc_controller.cpp.o
 
 .PHONY : src/mpc_controller.o
@@ -311,6 +351,33 @@ src/mpc_controller.s: src/mpc_controller.cpp.s
 src/mpc_controller.cpp.s:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/src/mpc_controller.cpp.s
 .PHONY : src/mpc_controller.cpp.s
+
+src/mpc_controller_v_as_input.o: src/mpc_controller_v_as_input.cpp.o
+
+.PHONY : src/mpc_controller_v_as_input.o
+
+# target to build an object file
+src/mpc_controller_v_as_input.cpp.o:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.o
+.PHONY : src/mpc_controller_v_as_input.cpp.o
+
+src/mpc_controller_v_as_input.i: src/mpc_controller_v_as_input.cpp.i
+
+.PHONY : src/mpc_controller_v_as_input.i
+
+# target to preprocess a source file
+src/mpc_controller_v_as_input.cpp.i:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.i
+.PHONY : src/mpc_controller_v_as_input.cpp.i
+
+src/mpc_controller_v_as_input.s: src/mpc_controller_v_as_input.cpp.s
+
+.PHONY : src/mpc_controller_v_as_input.s
+
+# target to generate assembly for a file
+src/mpc_controller_v_as_input.cpp.s:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.s
+.PHONY : src/mpc_controller_v_as_input.cpp.s
 
 src/my_cpp_node.o: src/my_cpp_node.cpp.o
 
@@ -426,8 +493,10 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... install/local"
 	@echo "... my_cpp_py_pkg_uninstall"
 	@echo "... mpc_node"
+	@echo "... mpc_node2"
 	@echo "... talker"
 	@echo "... install/strip"
 	@echo "... listener"
@@ -439,13 +508,18 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... my_cpp_node"
-	@echo "... install/local"
 	@echo "... src/f1tenth_kinematic_probfct.o"
 	@echo "... src/f1tenth_kinematic_probfct.i"
 	@echo "... src/f1tenth_kinematic_probfct.s"
+	@echo "... src/f1tenth_kinematic_probfct_v_as_input.o"
+	@echo "... src/f1tenth_kinematic_probfct_v_as_input.i"
+	@echo "... src/f1tenth_kinematic_probfct_v_as_input.s"
 	@echo "... src/mpc_controller.o"
 	@echo "... src/mpc_controller.i"
 	@echo "... src/mpc_controller.s"
+	@echo "... src/mpc_controller_v_as_input.o"
+	@echo "... src/mpc_controller_v_as_input.i"
+	@echo "... src/mpc_controller_v_as_input.s"
 	@echo "... src/my_cpp_node.o"
 	@echo "... src/my_cpp_node.i"
 	@echo "... src/my_cpp_node.s"
