@@ -298,32 +298,32 @@ src/f1tenth_kinematic_probfct.c.s:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/src/f1tenth_kinematic_probfct.c.s
 .PHONY : src/f1tenth_kinematic_probfct.c.s
 
-src/f1tenth_kinematic_probfct_v_as_input.o: src/f1tenth_kinematic_probfct_v_as_input.c.o
+src/f1tenth_kinematic_probfct_supervisor.o: src/f1tenth_kinematic_probfct_supervisor.c.o
 
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.o
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.o
 
 # target to build an object file
-src/f1tenth_kinematic_probfct_v_as_input.c.o:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.o
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.o
+src/f1tenth_kinematic_probfct_supervisor.c.o:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_supervisor.c.o
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.c.o
 
-src/f1tenth_kinematic_probfct_v_as_input.i: src/f1tenth_kinematic_probfct_v_as_input.c.i
+src/f1tenth_kinematic_probfct_supervisor.i: src/f1tenth_kinematic_probfct_supervisor.c.i
 
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.i
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.i
 
 # target to preprocess a source file
-src/f1tenth_kinematic_probfct_v_as_input.c.i:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.i
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.i
+src/f1tenth_kinematic_probfct_supervisor.c.i:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_supervisor.c.i
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.c.i
 
-src/f1tenth_kinematic_probfct_v_as_input.s: src/f1tenth_kinematic_probfct_v_as_input.c.s
+src/f1tenth_kinematic_probfct_supervisor.s: src/f1tenth_kinematic_probfct_supervisor.c.s
 
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.s
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.s
 
 # target to generate assembly for a file
-src/f1tenth_kinematic_probfct_v_as_input.c.s:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_v_as_input.c.s
-.PHONY : src/f1tenth_kinematic_probfct_v_as_input.c.s
+src/f1tenth_kinematic_probfct_supervisor.c.s:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_supervisor.c.s
+.PHONY : src/f1tenth_kinematic_probfct_supervisor.c.s
 
 src/mpc_controller.o: src/mpc_controller.cpp.o
 
@@ -352,32 +352,32 @@ src/mpc_controller.cpp.s:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/src/mpc_controller.cpp.s
 .PHONY : src/mpc_controller.cpp.s
 
-src/mpc_controller_v_as_input.o: src/mpc_controller_v_as_input.cpp.o
+src/mpc_controller_supervisor.o: src/mpc_controller_supervisor.cpp.o
 
-.PHONY : src/mpc_controller_v_as_input.o
+.PHONY : src/mpc_controller_supervisor.o
 
 # target to build an object file
-src/mpc_controller_v_as_input.cpp.o:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.o
-.PHONY : src/mpc_controller_v_as_input.cpp.o
+src/mpc_controller_supervisor.cpp.o:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_supervisor.cpp.o
+.PHONY : src/mpc_controller_supervisor.cpp.o
 
-src/mpc_controller_v_as_input.i: src/mpc_controller_v_as_input.cpp.i
+src/mpc_controller_supervisor.i: src/mpc_controller_supervisor.cpp.i
 
-.PHONY : src/mpc_controller_v_as_input.i
+.PHONY : src/mpc_controller_supervisor.i
 
 # target to preprocess a source file
-src/mpc_controller_v_as_input.cpp.i:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.i
-.PHONY : src/mpc_controller_v_as_input.cpp.i
+src/mpc_controller_supervisor.cpp.i:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_supervisor.cpp.i
+.PHONY : src/mpc_controller_supervisor.cpp.i
 
-src/mpc_controller_v_as_input.s: src/mpc_controller_v_as_input.cpp.s
+src/mpc_controller_supervisor.s: src/mpc_controller_supervisor.cpp.s
 
-.PHONY : src/mpc_controller_v_as_input.s
+.PHONY : src/mpc_controller_supervisor.s
 
 # target to generate assembly for a file
-src/mpc_controller_v_as_input.cpp.s:
-	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_v_as_input.cpp.s
-.PHONY : src/mpc_controller_v_as_input.cpp.s
+src/mpc_controller_supervisor.cpp.s:
+	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/mpc_controller_supervisor.cpp.s
+.PHONY : src/mpc_controller_supervisor.cpp.s
 
 src/my_cpp_node.o: src/my_cpp_node.cpp.o
 
@@ -511,15 +511,15 @@ help:
 	@echo "... src/f1tenth_kinematic_probfct.o"
 	@echo "... src/f1tenth_kinematic_probfct.i"
 	@echo "... src/f1tenth_kinematic_probfct.s"
-	@echo "... src/f1tenth_kinematic_probfct_v_as_input.o"
-	@echo "... src/f1tenth_kinematic_probfct_v_as_input.i"
-	@echo "... src/f1tenth_kinematic_probfct_v_as_input.s"
+	@echo "... src/f1tenth_kinematic_probfct_supervisor.o"
+	@echo "... src/f1tenth_kinematic_probfct_supervisor.i"
+	@echo "... src/f1tenth_kinematic_probfct_supervisor.s"
 	@echo "... src/mpc_controller.o"
 	@echo "... src/mpc_controller.i"
 	@echo "... src/mpc_controller.s"
-	@echo "... src/mpc_controller_v_as_input.o"
-	@echo "... src/mpc_controller_v_as_input.i"
-	@echo "... src/mpc_controller_v_as_input.s"
+	@echo "... src/mpc_controller_supervisor.o"
+	@echo "... src/mpc_controller_supervisor.i"
+	@echo "... src/mpc_controller_supervisor.s"
 	@echo "... src/my_cpp_node.o"
 	@echo "... src/my_cpp_node.i"
 	@echo "... src/my_cpp_node.s"

@@ -34,7 +34,7 @@ using namespace std;
 //using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-const float LOOKAHEAD_DISTANCE = 1;
+const float LOOKAHEAD_DISTANCE = 1.5;
 const float VELOCITY = 1;
 const float MAX_STEERING_ANGLE = 0.4;
 
@@ -59,12 +59,14 @@ public:
     goal_marker_pub = this->create_publisher<visualization_msgs::msg::Marker>("current_goal_point", 10);
     drive_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
 
+    control_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("control", 10);
+
     odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this, std::placeholders::_1));
     
     last_visited_waypoints.clear();
     steering_angle = 0;
 
-    string file_name = "/home/emelie/ba_ws/src/ba_roslab/ba_roslab/map/Spielberg_map_filled_klein_centerline.csv";
+    string file_name = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv";
     ifstream Raceline_CSV;
     Raceline_CSV.open(file_name);
 
@@ -205,6 +207,8 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub;
   rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr drive_pub;
 
+  rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr control_pub;
+
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
 
   void publish_single_point(double x, double y){
@@ -304,18 +308,21 @@ private:
       steering_angle = turning_angle;
     }
 
-    cout<<"Steering_angle: " << steering_angle;
+    //cout<<"Steering_angle: " << steering_angle;
+
 
 
 
     if(go_drive){
+
       ackermann_msgs::msg::AckermannDriveStamped drive_msg;
       ackermann_msgs::msg::AckermannDrive drive;
       drive.speed = VELOCITY;
       drive.steering_angle = steering_angle;
       drive_msg.drive = drive;
 
-      drive_pub->publish(drive_msg);
+      control_pub->publish(drive_msg);
+      //drive_pub->publish(drive_msg);
       //todo
       //add velocitiy and angle later
       //cout<<"driving";
