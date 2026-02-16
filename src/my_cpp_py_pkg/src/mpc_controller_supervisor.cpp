@@ -88,8 +88,8 @@ public:
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
     flat_center_points_ = load_flat_pathpoints(centerline_file);
-    flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
     //for ease of programming in probfct
+    flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
     flat_inner_border_points_3d = convertPointsToTrajectory(flat_inner_border_points_);
     flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
     flat_outer_border_points_3d = convertPointsToTrajectory(flat_outer_border_points_);
@@ -119,11 +119,11 @@ public:
       RCLCPP_INFO(this->get_logger(), "waypoint %zu: x=%.6f, y=%.6f", i, x, y);
     }
 
-    auto test = convertPointsToTrajectory(flat_path_points_);
+   /*  auto test = convertPointsToTrajectory(flat_path_points_);
     for (int i = 0; i < test.size()/3; i++)
     {
       RCLCPP_INFO(this->get_logger(), "Traj %.d: x=%.3f, y=%.3f, yaw=%.3f", i,test[3*i],test[3*i +1],test[3*i +2]);
-    }
+    } */
     
 
     // Subscribe to odometry.
@@ -135,7 +135,7 @@ public:
       std::bind(&MPCNode::control_callback, this, std::placeholders::_1));
 
     // Other publishers…
-    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     backup_trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("backup_mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
@@ -147,9 +147,13 @@ public:
     //publish_reference_path(); //load in the reference path in RViz
     single_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
 
+    //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
+
     // Initialize GRAMPC
     grampc_supervisor = init_grampc();
     grampc_backup = init_grampc();
+
+    //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
   }
 
@@ -352,7 +356,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     // Init grampc
     TYPE_GRAMPC_POINTER(grampc)
     //typeUSERPARAM *userparam = NULL;
-    typeUSERPARAM *userparam = static_cast<void*>(&user_param_);
+    typeUSERPARAM *userparam = static_cast<void*>(&user_param_); //&userparam == memory address of userparam
     grampc_init(&grampc, userparam);
 
     // Set initial state and control limits
@@ -487,14 +491,17 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     user_param_.inner_border = flat_inner_border_points_3d.data();
     user_param_.inner_border_len = (int)flat_inner_border_points_3d.size()/3;
 
-   /*  //potentiell in control callback 
+    //potentiell in control callback 
     ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
     grampc_setparam_real_vector(grampc_backup, "x0", x0);
     grampc_run(grampc_backup);
+    RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
+
     // Extract control command.
     backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-    backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste
-     */
+    backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+   
+
     // Optionally publish predicted trajectory markers.
     publish_current_ref_trajectory();
     publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
@@ -568,9 +575,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     // }
 
     if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-      backup_steering_angle = steering_angle;
+     /*  backup_steering_angle = steering_angle;
       backup_v = v_next;
-
+ */
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = input_pp.speed;
       drive_msg.drive.steering_angle = input_pp.steer;
@@ -582,20 +589,6 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     }
     else if (!isnan(v_next) && !isnan(steering_angle) && infeasible){
 
-      /* if(infeasible_counter > 2){
-        
-        //update current state 
-        ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
-        grampc_setparam_real_vector(grampc_backup, "x0", x0);
-        grampc_run(grampc_backup);
-
-        // Extract control command.
-        backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-        backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution step
-
-        publish_backup_mpc_trajectory();
-      }  */
-     
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = backup_v;
       drive_msg.drive.steering_angle = backup_steering_angle;
@@ -613,8 +606,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       drive_publisher_->publish(drive_msg);
 
       RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
-      //rclcpp::sleep_for(std::chrono::milliseconds(500));
-      //rclcpp::shutdown();
+      rclcpp::sleep_for(std::chrono::milliseconds(500));
+      rclcpp::shutdown();
     }
 
     
@@ -668,7 +661,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     }
     trajectory_publisher_->publish(marker_array);
   }
-
+ 
    // --------------------------
   // Visualize MPC horizon trajectory in RViz.
   void publish_backup_mpc_trajectory() {

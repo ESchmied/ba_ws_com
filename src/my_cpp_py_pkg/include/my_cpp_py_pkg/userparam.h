@@ -52,7 +52,7 @@ typedef struct{
     double I_z;
 
     // Others
-    double centerline_dist;
+    //double centerline_dist;
     bool soft_constraints;
     //ref traj = way points x,y,yaw
     double* ref_traj;
@@ -67,14 +67,14 @@ typedef struct{
     double* outer_border;
     int outer_border_len;
 
-    //for debugging 
+    /* //for debugging 
     double proj_border_point_x;
     double proj_border_point_y;
     double proj_center_point_x;
     double proj_center_point_y;
     double car_pos_x;
     double car_pos_y;
-
+ */
 } UserParam;
 
 #ifdef __cplusplus
