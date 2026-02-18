@@ -50,9 +50,9 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
-constexpr typeRNum DT = 0.1;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 16; //51
-constexpr typeRNum THOR = 1.5; //2.5
+constexpr typeRNum DT = 0.5;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 6; //51
+constexpr typeRNum THOR = 2.5; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -204,6 +204,7 @@ private:
   vector<double> ref_traj_;
 
   int infeasible_counter = 0;
+  bool backup_flag = false;
 
   double backup_steering_angle;
   double backup_v;
@@ -212,6 +213,11 @@ private:
   UserParam user_param_;
 
   my_state current_state;
+
+  double euclidian_distance(double point1_x, double point1_y, double point2_x, double point2_y){
+    double dist_sqrd = POW((point1_x - point2_x),2) + POW((point1_y - point2_y),2);
+    return sqrt(dist_sqrd);
+  }
 
   // --------------------------
   // Load CSV file into a flat vector of doubles.
@@ -434,6 +440,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
   // --------------------------
   // Odom_callback function: 
   // Update state and reference trajectory in userparam.
+  //TODO: Abbruch Bedingung backupMPC
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     // Extract state from odometry.
     //my_state current_state;
@@ -500,6 +507,14 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     // Extract control command.
     backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
     backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+
+    double nearest_center_pt_x = flat_center_points_[2*(nearest_center_idx)];
+    double nearest_center_pt_y = flat_center_points_[2*(nearest_center_idx)+1];
+
+    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.3){
+      backup_flag = false;
+      //printf("safe state reached!");
+    }
    
 
     // Optionally publish predicted trajectory markers.
@@ -513,56 +528,48 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     publish_border("outer_border_line", flat_outer_border_points_);
     
     publish_mpc_trajectory();
-    //publish_backup_mpc_trajectory();
+    publish_backup_mpc_trajectory();
   }
 
+  /* 
+  --------------------------------------------------------------
+  takes control input from PPC and checks if it leads to a feasible solutin in the next time step
+  if yes apply PP input 
+  if no: start backup mpc and wait till the car has returned to a safe starting point  */
   void control_callback(const ackermann_msgs::msg::AckermannDriveStamped::SharedPtr msg){
     my_input input_pp;
     input_pp.steer= msg->drive.steering_angle;
     input_pp.speed = msg->drive.speed;
-
-    
-
+  
     my_state state_t = get_next_state(current_state, input_pp, DT);
-
-
     //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
 
     
     // Update next state.
     ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
     grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
-
     // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
     // grampc_setparam_real(grampc, "t0", t);
 
     // Run GRAMPC.
     //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
-    //auto grampc = grampc_supervisor;
     grampc_run(grampc_supervisor);
     RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
     grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
 
-
     bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
-
-    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde ist 
+    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
     infeasible_counter += infeasible_flag;
-    printf("infeasible_counter: %d \n", infeasible_counter);
-
+    //printf("infeasible_counter: %d \n", infeasible_counter);
     bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
-
- 
     
-
-
-
+    
     // Extract control command.
     double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
     double acceleration = grampc_supervisor->sol->unext[1];
     double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
-    //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
 
+    //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
     // for (int i = 0; i < NHOR; ++i)
     // {
     //   double x_pred = grampc->rws->x[i * NX];
@@ -570,46 +577,63 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //   double yaw_pred = grampc->rws->x[i * NX + 2];
     //   double v_pred = grampc->rws->x[i * NX + 3];
     //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
-
     //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
     // }
 
-    if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-     /*  backup_steering_angle = steering_angle;
-      backup_v = v_next;
- */
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = input_pp.speed;
-      drive_msg.drive.steering_angle = input_pp.steer;
-      drive_publisher_->publish(drive_msg);
 
-      RCLCPP_INFO(this->get_logger(), "Feasible Input! PurePursuit Driving");
-      //rclcpp::sleep_for(std::chrono::milliseconds(500));
-      //rclcpp::shutdown();
+
+    if(backup_flag == false){
+      //printf("backup_flag == false \n");
+      //found a feasible solution
+      if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
+       /*  backup_steering_angle = steering_angle;
+        backup_v = v_next;
+ */ 
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = input_pp.speed;
+        drive_msg.drive.steering_angle = input_pp.steer;
+        drive_publisher_->publish(drive_msg);
+
+        RCLCPP_INFO(this->get_logger(), "Feasible Input! PurePursuit Driving");
+        //rclcpp::sleep_for(std::chrono::milliseconds(500));
+        //rclcpp::shutdown();
+      }
+      //found a soolution but is infeasible
+      else if (!isnan(v_next) && !isnan(steering_angle) && infeasible){
+
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = backup_v;
+        drive_msg.drive.steering_angle = backup_steering_angle;
+        drive_publisher_->publish(drive_msg);
+
+        RCLCPP_INFO(this->get_logger(), "Infeasible solution! Backup MPC now driving");
+        backup_flag = true;
+        //rclcpp::sleep_for(std::chrono::milliseconds(500));
+        //rclcpp::shutdown();
+
+      }
+      //found no solution
+      else{
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = 0.0;
+        drive_msg.drive.steering_angle = 0.0;
+        drive_publisher_->publish(drive_msg);
+
+        RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
+        rclcpp::sleep_for(std::chrono::milliseconds(500));
+        rclcpp::shutdown();
+      }
+
     }
-    else if (!isnan(v_next) && !isnan(steering_angle) && infeasible){
-
+    else{
+      //printf("backup_flag == true \n");
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = backup_v;
       drive_msg.drive.steering_angle = backup_steering_angle;
       drive_publisher_->publish(drive_msg);
 
-      RCLCPP_INFO(this->get_logger(), "Infeasible solution! Backup MPC now driving");
-      //rclcpp::sleep_for(std::chrono::milliseconds(500));
-      //rclcpp::shutdown();
-      
+      RCLCPP_INFO(this->get_logger(), " Backup MPC still driving");
     }
-    else{
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = 0.0;
-      drive_msg.drive.steering_angle = 0.0;
-      drive_publisher_->publish(drive_msg);
-
-      RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
-      rclcpp::sleep_for(std::chrono::milliseconds(500));
-      rclcpp::shutdown();
-    }
-
     
   /*   if (isnan(v_next) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
