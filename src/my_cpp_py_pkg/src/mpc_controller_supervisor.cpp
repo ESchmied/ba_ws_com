@@ -27,7 +27,8 @@ extern "C" {
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; 
+//const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; 
+const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
 const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
 const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
 const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
@@ -35,7 +36,7 @@ const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
 constexpr typeRNum W = 0.31;
-constexpr typeRNum V_MAX = 1;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -50,9 +51,10 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
-constexpr typeRNum DT = 0.5;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 6; //51
-constexpr typeRNum THOR = 2.5; //2.5
+//wichtig das die Supervisor Punkte vor dem Auto liegen? 
+constexpr typeRNum DT = 0.2;  //0.25 ursprünglich 0.01 je größer dt desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 11; //11
+constexpr typeRNum THOR = 2.0; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -61,8 +63,8 @@ constexpr typeInt NU = 2; // steer, a
 constexpr typeRNum Q_POS = 0.5; //0.5
 constexpr typeRNum Q_THETA = 0.3; //0.3
 constexpr typeRNum Q_VEL = 0.1; //0.1
-constexpr typeRNum R_STEER = 0.1; //0.02
-constexpr typeRNum R_ACCEL = 0.02;
+constexpr typeRNum R_STEER = 0.1; //0.1
+constexpr typeRNum R_ACCEL = 0.02; //0.02
 
 struct my_state{
            double x;
@@ -382,19 +384,19 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
     //Important!! Without it the car drives serpentine-like 
     //works without too, but is not as smooth
-    grampc_setopt_string(grampc, "ShiftControl", "off");  //on
+    grampc_setopt_string(grampc, "ShiftControl", "off");  //off
 
     //maby only in v2.3
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
-    grampc_setopt_int(grampc, "MaxGradIter", 6);  //7 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc, "MaxGradIter", 6);  //6 //4 DEFAULT 2 //inner loop 
     grampc_setopt_int(grampc, "MaxMultIter", 2); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
-    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.0); //works with 1.05
-    grampc_setopt_real(grampc, "PenaltyDecreaseFactor", 1.0); //works with 1.05
+    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc, "PenaltyDecreaseFactor", 1.0); //works with 1.0
     grampc_setopt_real(grampc, "PenaltyMin", 1); //works with 1
 
 
@@ -488,30 +490,27 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     user_param_.center_traj_len = (int)center_traj_.size()/3;
 
     
-    //update border of user param
-    //auto outer_border = load_flat_pathpoints(outer_border_file);
-    //auto inner_border = load_flat_pathpoints(inner_border_file);
-    
+    //update border of user param    
     user_param_.outer_border = flat_outer_border_points_3d.data();
     user_param_.outer_border_len = (int)flat_outer_border_points_3d.size()/3;
 
     user_param_.inner_border = flat_inner_border_points_3d.data();
     user_param_.inner_border_len = (int)flat_inner_border_points_3d.size()/3;
 
-    //potentiell in control callback 
+    //start backup grampc
     ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
     grampc_setparam_real_vector(grampc_backup, "x0", x0);
     grampc_run(grampc_backup);
-    RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
+    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
 
-    // Extract control command.
-    backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
+    // Extract backup control command.
+    backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
     backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
 
     double nearest_center_pt_x = flat_center_points_[2*(nearest_center_idx)];
     double nearest_center_pt_y = flat_center_points_[2*(nearest_center_idx)+1];
 
-    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.3){
+    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.4){
       backup_flag = false;
       //printf("safe state reached!");
     }
@@ -554,8 +553,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     // Run GRAMPC.
     //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
     grampc_run(grampc_supervisor);
-    RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
-    grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
+    //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
 
     bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
     infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
@@ -635,24 +634,6 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       RCLCPP_INFO(this->get_logger(), " Backup MPC still driving");
     }
     
-  /*   if (isnan(v_next) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = 0.0;
-      drive_msg.drive.steering_angle = 0.0;
-      drive_publisher_->publish(drive_msg);
-
-      RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
-      rclcpp::sleep_for(std::chrono::milliseconds(500));
-      rclcpp::shutdown();
-    }
-
-    // Publish control command.
-    auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-    drive_msg.drive.speed = v_next;
-    drive_msg.drive.steering_angle = steering_angle;
-    drive_publisher_->publish(drive_msg);
-
- */
 
   }
 
@@ -671,9 +652,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     point.scale.y = 0.1;
     point.scale.z = 0.1;
 
-    point.color.r = 1.0;
+    point.color.r = 0.5;
     point.color.g = 0.0;
-    point.color.b = 0.0;
+    point.color.b = 0.5;
     point.color.a = 1.0;
 
     for (int i = 0; i < NHOR; i++) {
@@ -687,7 +668,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
   }
  
    // --------------------------
-  // Visualize MPC horizon trajectory in RViz.
+  // Visualize backup MPC horizon trajectory in RViz.
   void publish_backup_mpc_trajectory() {
     visualization_msgs::msg::MarkerArray marker_array;
     visualization_msgs::msg::Marker point;
@@ -702,8 +683,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     point.scale.z = 0.1;
 
     point.color.r = 0.0;
-    point.color.g = 1.0;
-    point.color.b = 1.0;
+    point.color.g = 0.5;
+    point.color.b = 0.5;
     point.color.a = 1.0;
 
     for (int i = 0; i < NHOR; i++) {
@@ -786,8 +767,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     point.scale.y = 0.1;
     point.scale.z = 0.1;
 
-    point.color.r = 1.0;
-    point.color.g = 0.0;
+    point.color.r = 0.0;
+    point.color.g = 1.0;
     point.color.b = 0.0;
     point.color.a = 1.0;
 
@@ -810,9 +791,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     marker.type = visualization_msgs::msg::Marker::SPHERE;
     marker.id = 9999;
 
-    marker.scale.x = 0.15;
-    marker.scale.y = 0.15;
-    marker.scale.z = 0.15;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
 
     marker.color.r = 1.0;
     marker.color.g = 0.0;

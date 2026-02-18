@@ -35,7 +35,7 @@ using namespace std;
 using std::placeholders::_1;
 
 const float LOOKAHEAD_DISTANCE = 1.5;
-const float VELOCITY = 1;
+const float VELOCITY = 3;
 const float MAX_STEERING_ANGLE = 0.4;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
