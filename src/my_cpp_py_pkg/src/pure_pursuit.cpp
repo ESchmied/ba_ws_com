@@ -57,11 +57,11 @@ public:
   {
     marker_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("csv_point", 10);
     goal_marker_pub = this->create_publisher<visualization_msgs::msg::Marker>("current_goal_point", 10);
-    drive_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
+    drive_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
 
-    control_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("control", 10);
+    control_pub = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/control", 10);
 
-    odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this, std::placeholders::_1));
+    odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom",10, std::bind(&Pure_Pursuit_Node::odom_callback, this, std::placeholders::_1));
     
     last_visited_waypoints.clear();
     steering_angle = 0;

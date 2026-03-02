@@ -24,7 +24,9 @@ find_package(std_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(ackermann_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 #find_package(tf2 REQUIRED)
+
 
 #include grampc
 include_directories(include /home/emelies/ros_mpc_env/grampc-2.2/include) #grampc.h
@@ -37,7 +39,7 @@ target_include_directories(mpc_node PUBLIC
     $<INSTALL_INTERFACE:include>)
 
 add_executable(mpc_node2 src/mpc_controller_supervisor.cpp src/f1tenth_kinematic_probfct_supervisor.c)
-ament_target_dependencies(mpc_node2 rclcpp nav_msgs ackermann_msgs visualization_msgs)
+ament_target_dependencies(mpc_node2 rclcpp nav_msgs ackermann_msgs visualization_msgs std_msgs)
 target_include_directories(mpc_node2 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)

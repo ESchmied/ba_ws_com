@@ -8,6 +8,9 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
+#include "std_msgs/msg/bool.hpp"
+
+
 extern "C" {
 #include "grampc.h"
 #include "time.h"
@@ -36,7 +39,7 @@ const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
 constexpr typeRNum W = 0.31;
-constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 3.0;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -52,9 +55,9 @@ constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
 //wichtig das die Supervisor Punkte vor dem Auto liegen? 
-constexpr typeRNum DT = 0.2;  //0.25 ursprünglich 0.01 je größer dt desto weniger oszilliert das auto
+constexpr typeRNum DT = 0.25;  //0.25 ursprünglich 0.01 je größer dt desto weniger oszilliert das auto
 constexpr typeRNum NHOR = 11; //11
-constexpr typeRNum THOR = 2.0; //2.5
+constexpr typeRNum THOR = 2.5; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -129,21 +132,23 @@ public:
     
 
     // Subscribe to odometry.
-    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom", 10, 
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", 10, 
       std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
 
     //subscribe to pure_pursuit control outputs 
-    control_subscriber_ = this->create_subscription<ackermann_msgs::msg::AckermannDriveStamped>("control", 10, 
+    control_subscriber_ = this->create_subscription<ackermann_msgs::msg::AckermannDriveStamped>("/control", 10, 
       std::bind(&MPCNode::control_callback, this, std::placeholders::_1));
 
     // Other publishers…
-    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     backup_trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("backup_mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
     border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("border_points", 10);
     border_line_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("border_line", 10);
+
+    collision_flag_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/collision_flag", 10);
     
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
@@ -181,6 +186,8 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr border_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr border_line_publisher_;
+
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr collision_flag_publisher_;
 
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr single_point_publisher_;
   
@@ -435,9 +442,15 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
 
     return state_t;
-    }
+  }
 
+  double wrapToPi(double number){
+    double wrappedNumber = fmod(number + M_PI, 2.0*M_PI);
+    if (wrappedNumber < 0) wrappedNumber += 2.0 * M_PI;
+    wrappedNumber -= M_PI;
 
+    return wrappedNumber;
+}
   
   // --------------------------
   // Odom_callback function: 
@@ -507,11 +520,14 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
     backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
 
-    double nearest_center_pt_x = flat_center_points_[2*(nearest_center_idx)];
-    double nearest_center_pt_y = flat_center_points_[2*(nearest_center_idx)+1];
+    double nearest_center_pt_x = center_traj_[0]; //use nearest point in traj should equal first point of traj
+    double nearest_center_pt_y = center_traj_[1];
+    double nearest_center_pt_yaw = center_traj_[2];
 
-    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.4){
+    //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
+    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
       backup_flag = false;
+      publish_collision_flag();
       //printf("safe state reached!");
     }
    
@@ -607,6 +623,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
         RCLCPP_INFO(this->get_logger(), "Infeasible solution! Backup MPC now driving");
         backup_flag = true;
+        publish_collision_flag();
         //rclcpp::sleep_for(std::chrono::milliseconds(500));
         //rclcpp::shutdown();
 
@@ -631,10 +648,17 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       drive_msg.drive.steering_angle = backup_steering_angle;
       drive_publisher_->publish(drive_msg);
 
-      RCLCPP_INFO(this->get_logger(), " Backup MPC still driving");
+      publish_collision_flag();
+      RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
     }
     
 
+  }
+
+  void publish_collision_flag(){
+    std_msgs::msg::Bool collision_flag;
+    collision_flag.data = backup_flag;
+    collision_flag_publisher_->publish(collision_flag);
   }
 
   // --------------------------
