@@ -537,10 +537,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
 
       auto current_time = std::chrono::steady_clock::now();
-      //auto diff = current_time - start_time;
       auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
-      //std::chrono::duration_cast<std::chrono::milliseconds> diff = current_time - start_time;
-      //duration > std::chrono::milliseconds(5) && 
+         
       //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
       if (duration > std::chrono::milliseconds(10) && euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
         backup_flag = false;
@@ -549,17 +547,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       }
     }
 
-    auto current_time = std::chrono::steady_clock::now();
-    //auto diff = current_time - start_time;
-    auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
-    //std::chrono::duration_cast<std::chrono::milliseconds> diff = current_time - start_time;
-    //duration > std::chrono::milliseconds(5) && 
-    //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
-    if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
-      backup_flag = false;
-      publish_collision_flag();
-      //printf("safe state reached!");
-    }
+    
    
 
     // Optionally publish predicted trajectory markers.
