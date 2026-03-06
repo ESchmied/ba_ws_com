@@ -24,7 +24,8 @@ extern "C" {
 #include <cmath>
 #include <limits>
 #include <algorithm>
-//#include kinematic_bicycle_model.cpp
+#include <chrono>
+
 
 
 using namespace std;
@@ -157,8 +158,8 @@ public:
     //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
     // Initialize GRAMPC
-    grampc_supervisor = init_grampc();
-    grampc_backup = init_grampc();
+    grampc_supervisor = init_grampc(10, 6);
+    grampc_backup = init_grampc(8,4);
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
@@ -214,6 +215,7 @@ private:
 
   int infeasible_counter = 0;
   bool backup_flag = false;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
 
   double backup_steering_angle;
   double backup_v;
@@ -367,7 +369,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
   // --------------------------
   // GRAMPC initialization (set parameters, dt, horizon, etc.)
-  typeGRAMPC* init_grampc() {
+  typeGRAMPC* init_grampc(int max_grad_iter = 6 , int max_mult_iter = 2) {
     // Init grampc
     TYPE_GRAMPC_POINTER(grampc)
     //typeUSERPARAM *userparam = NULL;
@@ -397,8 +399,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
-    grampc_setopt_int(grampc, "MaxGradIter", 6);  //6 //4 DEFAULT 2 //inner loop 
-    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 //2 DEFAULT 1 //outer loop
+    grampc_setopt_int(grampc, "MaxGradIter", max_grad_iter);  //6 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc, "MaxMultIter", max_mult_iter); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
@@ -524,6 +526,34 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     double nearest_center_pt_y = center_traj_[1];
     double nearest_center_pt_yaw = center_traj_[2];
 
+    if (backup_flag){
+      //printf("backup_flag == true \n");
+      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+      drive_msg.drive.speed = backup_v;
+      drive_msg.drive.steering_angle = backup_steering_angle;
+      drive_publisher_->publish(drive_msg);
+
+      publish_collision_flag();
+      RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
+
+      auto current_time = std::chrono::steady_clock::now();
+      //auto diff = current_time - start_time;
+      auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
+      //std::chrono::duration_cast<std::chrono::milliseconds> diff = current_time - start_time;
+      //duration > std::chrono::milliseconds(5) && 
+      //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
+      if (duration > std::chrono::milliseconds(10) && euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
+        backup_flag = false;
+        publish_collision_flag();
+        //printf("safe state reached!");
+      }
+    }
+
+    auto current_time = std::chrono::steady_clock::now();
+    //auto diff = current_time - start_time;
+    auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
+    //std::chrono::duration_cast<std::chrono::milliseconds> diff = current_time - start_time;
+    //duration > std::chrono::milliseconds(5) && 
     //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
     if (euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
       backup_flag = false;
@@ -626,6 +656,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
         publish_collision_flag();
         //rclcpp::sleep_for(std::chrono::milliseconds(500));
         //rclcpp::shutdown();
+        start_time = std::chrono::steady_clock::now();
 
       }
       //found no solution
@@ -641,16 +672,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       }
 
     }
-    else{
-      //printf("backup_flag == true \n");
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = backup_v;
-      drive_msg.drive.steering_angle = backup_steering_angle;
-      drive_publisher_->publish(drive_msg);
-
-      publish_collision_flag();
-      RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
-    }
+   
     
 
   }
