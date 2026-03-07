@@ -32,10 +32,10 @@ using namespace std;
 
 // Waypoint file, adjust as needed 
 //const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; 
-const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
-const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
-const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_inner_border.csv";
-const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_outer_border.csv";
+const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
+const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
@@ -88,8 +88,8 @@ struct my_input{
 // In your header or class definition:  
 class MPCNode : public rclcpp::Node {
 public:
-  MPCNode() : Node("mpc_node2") {
-    RCLCPP_INFO(this->get_logger(), "MPCNode2 initialized");
+  MPCNode() : Node("mpc_node_reset") {
+    RCLCPP_INFO(this->get_logger(), "MPCNode_reset initialized");
 
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
@@ -136,20 +136,24 @@ public:
     odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", 10, 
       std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
 
-    //subscribe to pure_pursuit control outputs 
+    /* //subscribe to pure_pursuit control outputs 
     control_subscriber_ = this->create_subscription<ackermann_msgs::msg::AckermannDriveStamped>("/control", 10, 
       std::bind(&MPCNode::control_callback, this, std::placeholders::_1));
-
+ */ 
+    //subscribe to collision flag from RL is true if collision was detected
+    collision_flag_subscriber_ = this->create_subscription<std_msgs::msg::Bool>("/collision_flag", 10, 
+      std::bind(&MPCNode::collision_flag_callback, this, std::placeholders::_1));
     // Other publishers…
-    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/backup_control", 10);
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     backup_trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("backup_mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
     border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("border_points", 10);
     border_line_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("border_line", 10);
-
-    collision_flag_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/collision_flag", 10);
+    
+    //is true if mpc is still driving
+    backup_flag_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/backup_flag", 10);
     
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
@@ -158,7 +162,7 @@ public:
     //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
     // Initialize GRAMPC
-    grampc_supervisor = init_grampc(8, 6);
+    //grampc_supervisor = init_grampc(8, 6);
     grampc_backup = init_grampc(8, 6);
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
@@ -177,7 +181,8 @@ public:
 private:
   // Publishers/subscribers...
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
-  rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr control_subscriber_;
+  //rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr control_subscriber_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr collision_flag_subscriber_;
 
   rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr drive_publisher_;
 
@@ -188,13 +193,13 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr border_line_publisher_;
 
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr collision_flag_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr backup_flag_publisher_;
 
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr single_point_publisher_;
   
 
   // GRAMPC pointer
-  TYPE_GRAMPC_POINTER(grampc_supervisor)
+  //TYPE_GRAMPC_POINTER(grampc_supervisor)
   TYPE_GRAMPC_POINTER(grampc_backup)
   
 
@@ -214,6 +219,7 @@ private:
   vector<double> ref_traj_;
 
   int infeasible_counter = 0;
+  bool collision_flag = false;
   bool backup_flag = false;
   std::chrono::time_point<std::chrono::steady_clock> start_time;
 
@@ -526,14 +532,16 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     double nearest_center_pt_y = center_traj_[1];
     double nearest_center_pt_yaw = center_traj_[2];
 
-    if (backup_flag){
+    if (collision_flag){
+      backup_flag = true;
+      publish_backup_flag();
       //printf("backup_flag == true \n");
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = backup_v;
       drive_msg.drive.steering_angle = backup_steering_angle;
       drive_publisher_->publish(drive_msg);
 
-      publish_collision_flag();
+      
       RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
 
       auto current_time = std::chrono::steady_clock::now();
@@ -542,7 +550,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
       if (duration > std::chrono::milliseconds(10) && euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
         backup_flag = false;
-        publish_collision_flag();
+        publish_backup_flag();
         //printf("safe state reached!");
       }
     }
@@ -560,15 +568,22 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     publish_border("inner_border_line", flat_inner_border_points_);
     publish_border("outer_border_line", flat_outer_border_points_);
     
-    publish_mpc_trajectory();
+    //publish_mpc_trajectory();
     publish_backup_mpc_trajectory();
+  }
+
+  void collision_flag_callback(const std_msgs::msg::Bool msg){
+    collision_flag = msg.data;
+    if(collision_flag = true){
+      start_time = std::chrono::steady_clock::now();
+    }
   }
 
   /* 
   --------------------------------------------------------------
   takes control input from PPC and checks if it leads to a feasible solutin in the next time step
   if yes apply PP input 
-  if no: start backup mpc and wait till the car has returned to a safe starting point  */
+  if no: start backup mpc and wait till the car has returned to a safe starting point  
   void control_callback(const ackermann_msgs::msg::AckermannDriveStamped::SharedPtr msg){
     my_input input_pp;
     input_pp.steer= msg->drive.steering_angle;
@@ -619,9 +634,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       //printf("backup_flag == false \n");
       //found a feasible solution
       if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-       /*  backup_steering_angle = steering_angle;
+       backup_steering_angle = steering_angle;
         backup_v = v_next;
- */ 
+ 
         auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
         drive_msg.drive.speed = input_pp.speed;
         drive_msg.drive.steering_angle = input_pp.steer;
@@ -641,7 +656,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
         RCLCPP_INFO(this->get_logger(), "Infeasible solution! Backup MPC now driving");
         backup_flag = true;
-        publish_collision_flag();
+        publish_backup_flag();
         //rclcpp::sleep_for(std::chrono::milliseconds(500));
         //rclcpp::shutdown();
         start_time = std::chrono::steady_clock::now();
@@ -663,15 +678,15 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
    
     
 
+  } */
+
+  void publish_backup_flag(){
+    std_msgs::msg::Bool backup_flag_msg;
+    backup_flag_msg.data = backup_flag;
+    backup_flag_publisher_->publish(backup_flag_msg);
   }
 
-  void publish_collision_flag(){
-    std_msgs::msg::Bool collision_flag;
-    collision_flag.data = backup_flag;
-    collision_flag_publisher_->publish(collision_flag);
-  }
-
-  // --------------------------
+ /*  // --------------------------
   // Visualize MPC horizon trajectory in RViz.
   void publish_mpc_trajectory() {
     visualization_msgs::msg::MarkerArray marker_array;
@@ -699,7 +714,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       marker_array.markers.push_back(point);
     }
     trajectory_publisher_->publish(marker_array);
-  }
+  } */
  
    // --------------------------
   // Visualize backup MPC horizon trajectory in RViz.

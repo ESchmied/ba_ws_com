@@ -8,9 +8,6 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
-#include "std_msgs/msg/bool.hpp"
-
-
 extern "C" {
 #include "grampc.h"
 #include "time.h"
@@ -24,23 +21,20 @@ extern "C" {
 #include <cmath>
 #include <limits>
 #include <algorithm>
-#include <chrono>
-
 
 
 using namespace std;
 
 // Waypoint file, adjust as needed 
-//const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; 
-const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
-const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
-const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_inner_border.csv";
-const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_outer_border.csv";
+const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
+const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
+const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
+const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
 constexpr typeRNum W = 0.31;
-constexpr typeRNum V_MAX = 3.0;     // [m/s] ursprünglich 2
+constexpr typeRNum V_MAX = 3;     // [m/s] ursprünglich 2
 constexpr typeRNum M = 3.74;
 constexpr typeRNum LF = L/2;
 constexpr typeRNum LR = L/2;
@@ -55,10 +49,9 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
-//wichtig das die Supervisor Punkte vor dem Auto liegen? 
-constexpr typeRNum DT = 0.25;  //0.25 ursprünglich 0.01 je größer dt desto weniger oszilliert das auto
-constexpr typeRNum NHOR = 11; //11
-constexpr typeRNum THOR = 2.5; //2.5
+constexpr typeRNum DT = 0.05;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum NHOR = 11; //51
+constexpr typeRNum THOR = 0.55; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -67,35 +60,22 @@ constexpr typeInt NU = 2; // steer, a
 constexpr typeRNum Q_POS = 0.5; //0.5
 constexpr typeRNum Q_THETA = 0.3; //0.3
 constexpr typeRNum Q_VEL = 0.1; //0.1
-constexpr typeRNum R_STEER = 0.1; //0.1
-constexpr typeRNum R_ACCEL = 0.02; //0.02
-
-struct my_state{
-           double x;
-           double y;
-           double yaw;
-           double v;
-       };
-
-struct my_input{
-        double speed;
-        double a;
-        double steer;
-    };
+constexpr typeRNum R_STEER = 0.1; //0.02
+constexpr typeRNum R_ACCEL = 0.02;
 
 
 
 // In your header or class definition:  
 class MPCNode : public rclcpp::Node {
 public:
-  MPCNode() : Node("mpc_node2") {
-    RCLCPP_INFO(this->get_logger(), "MPCNode2 initialized");
+  MPCNode() : Node("mpc_node_reset") {
+    RCLCPP_INFO(this->get_logger(), "MPCNode initialized");
 
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
     flat_center_points_ = load_flat_pathpoints(centerline_file);
-    //for ease of programming in probfct
     flat_inner_border_points_ = load_flat_pathpoints(inner_border_file);
+    //for ease of programming in probfct
     flat_inner_border_points_3d = convertPointsToTrajectory(flat_inner_border_points_);
     flat_outer_border_points_ = load_flat_pathpoints(outer_border_file);
     flat_outer_border_points_3d = convertPointsToTrajectory(flat_outer_border_points_);
@@ -125,44 +105,31 @@ public:
       RCLCPP_INFO(this->get_logger(), "waypoint %zu: x=%.6f, y=%.6f", i, x, y);
     }
 
-   /*  auto test = convertPointsToTrajectory(flat_path_points_);
+    auto test = convertPointsToTrajectory(flat_path_points_);
     for (int i = 0; i < test.size()/3; i++)
     {
       RCLCPP_INFO(this->get_logger(), "Traj %.d: x=%.3f, y=%.3f, yaw=%.3f", i,test[3*i],test[3*i +1],test[3*i +2]);
-    } */
+    }
     
 
     // Subscribe to odometry.
-    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", 10, 
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom", 10, 
       std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
 
-    //subscribe to pure_pursuit control outputs 
-    control_subscriber_ = this->create_subscription<ackermann_msgs::msg::AckermannDriveStamped>("/control", 10, 
-      std::bind(&MPCNode::control_callback, this, std::placeholders::_1));
-
     // Other publishers…
-    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/backup_control", 10);
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
-    backup_trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("backup_mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
     border_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("border_points", 10);
     border_line_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("border_line", 10);
-
-    collision_flag_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/collision_flag", 10);
     
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
     single_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
 
-    //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
-
     // Initialize GRAMPC
-    grampc_supervisor = init_grampc(8, 6);
-    grampc_backup = init_grampc(8, 6);
-
-    //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
-
+    init_grampc();
   }
 
   //what? zum manuellen starten den autos?
@@ -177,26 +144,20 @@ public:
 private:
   // Publishers/subscribers...
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscriber_;
-  rclcpp::Subscription<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr control_subscriber_;
 
   rclcpp::Publisher<ackermann_msgs::msg::AckermannDriveStamped>::SharedPtr drive_publisher_;
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr trajectory_publisher_;
-  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr backup_trajectory_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr active_ref_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr border_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr reference_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr border_line_publisher_;
 
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr collision_flag_publisher_;
-
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr single_point_publisher_;
   
 
   // GRAMPC pointer
-  TYPE_GRAMPC_POINTER(grampc_supervisor)
-  TYPE_GRAMPC_POINTER(grampc_backup)
-  
+  TYPE_GRAMPC_POINTER(grampc)
 
   // Flat reference path (each waypoint stored as [x, y])
   vector<double> flat_path_points_;
@@ -214,21 +175,9 @@ private:
   vector<double> ref_traj_;
 
   int infeasible_counter = 0;
-  bool backup_flag = false;
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-
-  double backup_steering_angle;
-  double backup_v;
 
   // Store the user parameters to pass to grampc
   UserParam user_param_;
-
-  my_state current_state;
-
-  double euclidian_distance(double point1_x, double point1_y, double point2_x, double point2_y){
-    double dist_sqrd = POW((point1_x - point2_x),2) + POW((point1_y - point2_y),2);
-    return sqrt(dist_sqrd);
-  }
 
   // --------------------------
   // Load CSV file into a flat vector of doubles.
@@ -337,43 +286,13 @@ private:
 
     return nearest_idx;
   }
-/* 
-  // ==================== GRAMPC ====================
-typeGRAMPC* create_grampc_instance(UserParam* param){
-    // === Initialize GRAMPC ===
-    TYPE_GRAMPC_POINTER(grampc)
-    typeUSERPARAM *userparam = static_cast<void *>(param);
-    grampc_init(&grampc, userparam);
 
-    // Set initial state (p_lon, v_lon, p_lat, v_lat)
-    double x0[4] = {0.0, 2.0, 0.0, 0.0};
-    grampc_setparam_real_vector(grampc, "x0", x0);
-
-    // a_lon, a_lat constraints
-    ctypeRNum umin[2] = {-10, -10};
-    ctypeRNum umax[2] = {10, 10};
-    grampc_setparam_real_vector(grampc, "umin", umin);
-    grampc_setparam_real_vector(grampc, "umax", umax);
-
-    // Horizon and step size
-    grampc_setparam_real(grampc, "Thor", param->Thor);
-    grampc_setparam_real(grampc, "dt", param->dt);
-
-    grampc_setopt_string(grampc, "Integrator", "modeuler"); // feste Schrittgröße
-
-    grampc_setopt_int(grampc, "MaxGradIter", 5); 
-    grampc_setopt_int(grampc, "MaxMultIter", 10);
-
-    return grampc;
-} */
 
   // --------------------------
   // GRAMPC initialization (set parameters, dt, horizon, etc.)
-  typeGRAMPC* init_grampc(int max_grad_iter = 6 , int max_mult_iter = 2) {
+  void init_grampc() {
     // Init grampc
-    TYPE_GRAMPC_POINTER(grampc)
-    //typeUSERPARAM *userparam = NULL;
-    typeUSERPARAM *userparam = static_cast<void*>(&user_param_); //&userparam == memory address of userparam
+    typeUSERPARAM *userparam = NULL;
     grampc_init(&grampc, userparam);
 
     // Set initial state and control limits
@@ -393,19 +312,18 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
     //Important!! Without it the car drives serpentine-like 
     //works without too, but is not as smooth
-    grampc_setopt_string(grampc, "ShiftControl", "off");  //off
+    grampc_setopt_string(grampc, "ShiftControl", "on");  //on
 
     //maby only in v2.3
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
-    grampc_setopt_int(grampc, "MaxGradIter", max_grad_iter);  //6 //4 DEFAULT 2 //inner loop 
-    grampc_setopt_int(grampc, "MaxMultIter", max_mult_iter); //2 //2 DEFAULT 1 //outer loop
+    grampc_setopt_int(grampc, "MaxGradIter", 8);  //7 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc, "MaxMultIter", 3); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
-    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.0); //works with 1.0
-    grampc_setopt_real(grampc, "PenaltyDecreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.05); //works with 1.05
     grampc_setopt_real(grampc, "PenaltyMin", 1); //works with 1
 
 
@@ -414,56 +332,18 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //all constraints are satisfied within the tolerance defined by ConstraintsAbsTol
     ctypeRNum ConstraintsAbsTol[1] = { 0 }; //1e-2 works with 0
     grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
-
-    return grampc;
   }
 
-  my_state get_next_state(my_state state0, my_input input0, double t){
-    my_state state_t;
 
-    //dx/dt
-    double dx = state0.v* cos(state0.yaw);
-    state_t.x = state0.x + dx*t;
-
-    //yt = y0 + y' *t;
-    double dy = state0.v* sin(state0.yaw);
-    state_t.y = state0.y + dy *t;
-
-    //yawt = yaw0 + yaw' *t;
-    double dyaw = state0.v * tan(input0.steer)/L;
-    state_t.yaw = state0.yaw + dyaw *t;
-
-    //vt = v0 + a *t;
-    /* if (input0.speed ==  NAN){
-      state_t.v = state0.v + input0.a *t;
-    }
-    else{
-      state_t.v = input0.speed;
-    } */
-    state_t.v = input0.speed;
-
-
-    return state_t;
-  }
-
-  double wrapToPi(double number){
-    double wrappedNumber = fmod(number + M_PI, 2.0*M_PI);
-    if (wrappedNumber < 0) wrappedNumber += 2.0 * M_PI;
-    wrappedNumber -= M_PI;
-
-    return wrappedNumber;
-}
   
   // --------------------------
   // Odom_callback function: 
   // Update state and reference trajectory in userparam.
-  //TODO: Abbruch Bedingung backupMPC
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     // Extract state from odometry.
-    //my_state current_state;
-    current_state.x = msg->pose.pose.position.x;
-    current_state.y = msg->pose.pose.position.y;
-    current_state.v = msg->twist.twist.linear.x; //maby nicht in vicon msgs enthalten current_state.
+    double x = msg->pose.pose.position.x;
+    double y = msg->pose.pose.position.y;
+    double v = msg->twist.twist.linear.x; //maby nicht in vicon msgs enthalten 
 
     double qx = msg->pose.pose.orientation.x;
     double qy = msg->pose.pose.orientation.y;
@@ -474,13 +354,11 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     tf2::Quaternion q(qx, qy, qz, qw);
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw); //warum hat die Matrix keinen Namen?
 
-    current_state.yaw = yaw;
-
-    //RCLCPP_INFO(this->get_logger(), "Odom received: x=%.6f, y=%.6f, yaw=%.2f, v=%.2f", current_state.x, current_state.y, current_state.yaw, current_state.v);
+    RCLCPP_INFO(this->get_logger(), "Odom received: x=%.6f, y=%.6f, yaw=%.2f, v=%.2f", x, y, yaw, v);
     
     // Compute the reference trajectory using the flat path points.
-    int nearest_idx = getNearestIndex(current_state.x, current_state.y, flat_path_points_);
-    int nearest_center_idx = getNearestIndex(current_state.x, current_state.y, flat_center_points_);
+    int nearest_idx = getNearestIndex(x,y,flat_path_points_);
+    int nearest_center_idx = getNearestIndex(x,y, flat_center_points_);
     //int nearest_inner_border_idx = getNearestIndex(x,y, flat_inner_border_points_);
     //int nearest_outer_border_idx = getNearestIndex(x,y, flat_outer_border_points_);
 
@@ -502,107 +380,57 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     user_param_.ref_length = (int)ref_traj_.size()/3;
 
     user_param_.center_traj = center_traj_.data();
-    user_param_.center_traj_len = (int)center_traj_.size()/3;
+    user_param_.center_traj_len = center_traj_.size()/3;
 
     
-    //update border of user param    
+    //update border of user param
+    //auto outer_border = load_flat_pathpoints(outer_border_file);
+    //auto inner_border = load_flat_pathpoints(inner_border_file);
+    
     user_param_.outer_border = flat_outer_border_points_3d.data();
     user_param_.outer_border_len = (int)flat_outer_border_points_3d.size()/3;
 
     user_param_.inner_border = flat_inner_border_points_3d.data();
     user_param_.inner_border_len = (int)flat_inner_border_points_3d.size()/3;
 
-    //start backup grampc
-    ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
-    grampc_setparam_real_vector(grampc_backup, "x0", x0);
-    grampc_run(grampc_backup);
-    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
+    grampc->userparam = static_cast<void*>(&user_param_);
 
-    // Extract backup control command.
-    backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
-    backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+    // Update current state.
+    ctypeRNum x0[NX] = { x, y, yaw, v};
+    grampc_setparam_real_vector(grampc, "x0", x0);
 
-    double nearest_center_pt_x = center_traj_[0]; //use nearest point in traj should equal first point of traj
-    double nearest_center_pt_y = center_traj_[1];
-    double nearest_center_pt_yaw = center_traj_[2];
-
-    if (backup_flag){
-      //printf("backup_flag == true \n");
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = backup_v;
-      drive_msg.drive.steering_angle = backup_steering_angle;
-      drive_publisher_->publish(drive_msg);
-
-      publish_collision_flag();
-      RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
-
-      auto current_time = std::chrono::steady_clock::now();
-      auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
-         
-      //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
-      if (duration > std::chrono::milliseconds(10) && euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
-        backup_flag = false;
-        publish_collision_flag();
-        //printf("safe state reached!");
-      }
-    }
-
-    
-   
-
-    // Optionally publish predicted trajectory markers.
-    publish_current_ref_trajectory();
-    publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
-    publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
-    
-    publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);
-    
-    publish_border("inner_border_line", flat_inner_border_points_);
-    publish_border("outer_border_line", flat_outer_border_points_);
-    
-    publish_mpc_trajectory();
-    publish_backup_mpc_trajectory();
-  }
-
-  /* 
-  --------------------------------------------------------------
-  takes control input from PPC and checks if it leads to a feasible solutin in the next time step
-  if yes apply PP input 
-  if no: start backup mpc and wait till the car has returned to a safe starting point  */
-  void control_callback(const ackermann_msgs::msg::AckermannDriveStamped::SharedPtr msg){
-    my_input input_pp;
-    input_pp.steer= msg->drive.steering_angle;
-    input_pp.speed = msg->drive.speed;
-  
-    my_state state_t = get_next_state(current_state, input_pp, DT);
-    //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
-
-    
-    // Update next state.
-    ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
-    grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
     // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
     // grampc_setparam_real(grampc, "t0", t);
 
     // Run GRAMPC.
     //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
-    grampc_run(grampc_supervisor);
-    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
-    //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+    grampc_run(grampc);
+    RCLCPP_INFO(this->get_logger(), "Finished GRAMPC run. Status %d", grampc->sol->status);
+    grampc_printstatus(grampc->sol->status, STATUS_LEVEL_DEBUG);
 
-    bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
-    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
+
+    bool infeasible_flag = grampc->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
+
+    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde ist 
     infeasible_counter += infeasible_flag;
-    //printf("infeasible_counter: %d \n", infeasible_counter);
-    bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
-    
-    
-    // Extract control command.
-    double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-    double acceleration = grampc_supervisor->sol->unext[1];
-    double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
+    printf("infeasible_counter: %d \n", infeasible_counter);
 
-    //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
+    bool infeasible = infeasible_counter > 10; //>20 works for driving Only set if the flag was active for multiple runs
+
+ 
+    //publish after Grampc run to avoid interfering with the data update
+    //publish_single_point("proj_center_point", user_param_.proj_center_point_x, user_param_.proj_center_point_y);  
+    //publish_single_point("proj_border_point", user_param_.proj_border_point_x, user_param_.proj_border_point_y);
+    //publish_single_point("next_point", user_param_.car_pos_x, user_param_.car_pos_y);
+
+
+
+    // Extract control command.
+    double steering_angle = grampc->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
+    double acceleration = grampc->sol->unext[1];
+    double v_next = grampc->sol->xnext[3]; // Extract the velocity state of the next solution step
+    RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
+
     // for (int i = 0; i < NHOR; ++i)
     // {
     //   double x_pred = grampc->rws->x[i * NX];
@@ -610,65 +438,38 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //   double yaw_pred = grampc->rws->x[i * NX + 2];
     //   double v_pred = grampc->rws->x[i * NX + 3];
     //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
+
     //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
     // }
-
-
-
-    if(backup_flag == false){
-      //printf("backup_flag == false \n");
-      //found a feasible solution
-      if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-       /*  backup_steering_angle = steering_angle;
-        backup_v = v_next;
- */ 
-        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-        drive_msg.drive.speed = input_pp.speed;
-        drive_msg.drive.steering_angle = input_pp.steer;
-        drive_publisher_->publish(drive_msg);
-
-        RCLCPP_INFO(this->get_logger(), "Feasible Input! PurePursuit Driving");
-        //rclcpp::sleep_for(std::chrono::milliseconds(500));
-        //rclcpp::shutdown();
-      }
-      //found a soolution but is infeasible
-      else if (!isnan(v_next) && !isnan(steering_angle) && infeasible){
-
-        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-        drive_msg.drive.speed = backup_v;
-        drive_msg.drive.steering_angle = backup_steering_angle;
-        drive_publisher_->publish(drive_msg);
-
-        RCLCPP_INFO(this->get_logger(), "Infeasible solution! Backup MPC now driving");
-        backup_flag = true;
-        publish_collision_flag();
-        //rclcpp::sleep_for(std::chrono::milliseconds(500));
-        //rclcpp::shutdown();
-        start_time = std::chrono::steady_clock::now();
-
-      }
-      //found no solution
-      else{
-        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-        drive_msg.drive.speed = 0.0;
-        drive_msg.drive.steering_angle = 0.0;
-        drive_publisher_->publish(drive_msg);
-
-        RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
-        rclcpp::sleep_for(std::chrono::milliseconds(500));
-        rclcpp::shutdown();
-      }
-
-    }
-   
     
+    if (isnan(v_next) || isnan(steering_angle) || infeasible){ //what does is nan? nan ^= not-a-number
+      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+      drive_msg.drive.speed = 0.0;
+      drive_msg.drive.steering_angle = 0.0;
+      drive_publisher_->publish(drive_msg);
 
-  }
+      RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
+      rclcpp::sleep_for(std::chrono::milliseconds(500));
+      rclcpp::shutdown();
+    }
 
-  void publish_collision_flag(){
-    std_msgs::msg::Bool collision_flag;
-    collision_flag.data = backup_flag;
-    collision_flag_publisher_->publish(collision_flag);
+    // Publish control command.
+    auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+    drive_msg.drive.speed = v_next;
+    drive_msg.drive.steering_angle = steering_angle;
+    drive_publisher_->publish(drive_msg);
+
+    // Optionally publish predicted trajectory markers.
+    publish_current_ref_trajectory();
+    publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
+    publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
+
+    publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);
+
+    publish_border("inner_border_line", flat_inner_border_points_);
+    publish_border("outer_border_line", flat_outer_border_points_);
+    
+    publish_mpc_trajectory();
   }
 
   // --------------------------
@@ -686,49 +487,19 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     point.scale.y = 0.1;
     point.scale.z = 0.1;
 
-    point.color.r = 0.5;
+    point.color.r = 1.0;
     point.color.g = 0.0;
-    point.color.b = 0.5;
+    point.color.b = 0.0;
     point.color.a = 1.0;
 
     for (int i = 0; i < NHOR; i++) {
       point.id = i;
-      point.pose.position.x = grampc_supervisor->rws->x[i * NX];
-      point.pose.position.y = grampc_supervisor->rws->x[i * NX + 1];
+      point.pose.position.x = grampc->rws->x[i * NX];
+      point.pose.position.y = grampc->rws->x[i * NX + 1];
       point.pose.position.z = 0.1; //points are floating a bit over ground
       marker_array.markers.push_back(point);
     }
     trajectory_publisher_->publish(marker_array);
-  }
- 
-   // --------------------------
-  // Visualize backup MPC horizon trajectory in RViz.
-  void publish_backup_mpc_trajectory() {
-    visualization_msgs::msg::MarkerArray marker_array;
-    visualization_msgs::msg::Marker point;
-    point.header.frame_id = "/map";
-    point.header.stamp = this->now();
-    point.ns = "backup_mpc_horizon";
-    point.type = visualization_msgs::msg::Marker::SPHERE;
-    point.action = visualization_msgs::msg::Marker::ADD;
-    //Scale and color of the sphere
-    point.scale.x = 0.1; 
-    point.scale.y = 0.1;
-    point.scale.z = 0.1;
-
-    point.color.r = 0.0;
-    point.color.g = 0.5;
-    point.color.b = 0.5;
-    point.color.a = 1.0;
-
-    for (int i = 0; i < NHOR; i++) {
-      point.id = i;
-      point.pose.position.x = grampc_backup->rws->x[i * NX];
-      point.pose.position.y = grampc_backup->rws->x[i * NX + 1];
-      point.pose.position.z = 0.1; //points are floating a bit over ground
-      marker_array.markers.push_back(point);
-    }
-    backup_trajectory_publisher_->publish(marker_array);
   }
 
   // --------------------------
@@ -801,8 +572,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     point.scale.y = 0.1;
     point.scale.z = 0.1;
 
-    point.color.r = 0.0;
-    point.color.g = 1.0;
+    point.color.r = 1.0;
+    point.color.g = 0.0;
     point.color.b = 0.0;
     point.color.a = 1.0;
 
@@ -825,9 +596,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     marker.type = visualization_msgs::msg::Marker::SPHERE;
     marker.id = 9999;
 
-    marker.scale.x = 0.1;
-    marker.scale.y = 0.1;
-    marker.scale.z = 0.1;
+    marker.scale.x = 0.15;
+    marker.scale.y = 0.15;
+    marker.scale.z = 0.15;
 
     marker.color.r = 1.0;
     marker.color.g = 0.0;

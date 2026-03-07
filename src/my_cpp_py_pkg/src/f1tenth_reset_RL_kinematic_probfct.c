@@ -291,9 +291,7 @@ my_point find_proj_border_point(double* border, int border_len, my_point car_pos
         proj_border_point.y = car_on_near_to_next.y;
     }
     else{
-        //printf("new case not yet handled \n");
-        proj_border_point.x = car_on_near_to_next.x;
-        proj_border_point.y = car_on_near_to_next.y;
+        printf("new case not yet handled");
     }
 
     
@@ -309,7 +307,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
     *Nx = 4;    //Number of states [x, y, yaw, v]
     *Nu = 2;    //Number of controls [steering, acceleration]
     *Np = 0;    //Number of paramters
-    *Nh = 3;    //Number of inequalities (eigenltich 3)
+    *Nh = 2;    //Number of inequalities (eigenltich 3)
     *Ng = 0;    //Number of equalities
     *NgT = 0;
     *NhT = 0;
@@ -554,7 +552,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
     out[0] = x[3] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
-    out[1] = -x[3];                         // 0 <= v
+    //out[1] = -x[3];                         // 0 <= v
 
     //border constraint 
     //project car pos onto centerline
@@ -606,13 +604,13 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //calculate distance between proj_center_point und proj_border_point  
     typeRNum distance_border_center = euclidian_distance(proj_border_point, proj_center_point);
     typeRNum distance_center_car = euclidian_distance(proj_center_point, car_pos);
-    //if((distance_border_center -2*car_width ) <=  distance_center_car){
-    //   printf("pos contraint not satisfied! distance_border_center = %f, distance_center_car = %f\n", distance_border_center,  distance_center_car);
+    //if((distance_border_center ) <=  distance_center_car){
+       //printf("pos contraint not satisfied! distance_border_center = %f, distance_center_car = %f\n", distance_border_center,  distance_center_car);
     //}
     //printf("car_width: %f\n" , car_width);
     
     //das kleinere minus das größere
-    out[2] = POW2(distance_center_car) - POW2(distance_border_center -  0.5*car_width); //abstand auto-centerline < abstand centerline-border - car_width 
+    out[1] = POW2(distance_center_car) - POW2(distance_border_center - car_width); //abstand auto-centerline < abstand centerline-border - car_width 
     //out[2] = distance_center_car - (distance_border_center - car_width );
     //out[2] = distance_center_car - 0.5; //probe weise Schlauch um die centerline als Constraint
 
@@ -658,15 +656,15 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     //ableitung h nach x mal vector (but why?)
     //output sortiert nach der X[] variable die abgeleitet wird out[0] ^= x[0]'
     //ableitung für quadrierte Contraints
-    out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
-    out[1] = -2* (proj_center_point.y - x[1])* vec[2];
+    out[0] = -2* (proj_center_point.x - x[0])* vec[1]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    out[1] = -2* (proj_center_point.y - x[1])* vec[1];
 
     //ableitung der normalen Constraints
     //out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[2];
     //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
    
     out[2] = 0;
-    out[3] = vec[0]- vec[1]; //reine optimierung kommt vom gradient based mpc
+    out[3] = vec[0];//- vec[1]; //reine optimierung kommt vom gradient based mpc
 
 }
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/

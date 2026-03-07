@@ -68,18 +68,6 @@ install/local/fast: preinstall/fast
 	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
 .PHONY : install/local/fast
 
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
-
 # Special rule for the target install
 install: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
@@ -91,6 +79,18 @@ install/fast: preinstall/fast
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
 	/usr/bin/cmake -P cmake_install.cmake
 .PHONY : install/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
 
 # Special rule for the target list_install_components
 list_install_components:
@@ -205,6 +205,19 @@ mpc_node2: cmake_check_build_system
 mpc_node2/fast:
 	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/build
 .PHONY : mpc_node2/fast
+
+#=============================================================================
+# Target rules for targets named mpc_node_reset
+
+# Build rule for target.
+mpc_node_reset: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 mpc_node_reset
+.PHONY : mpc_node_reset
+
+# fast build rule for target.
+mpc_node_reset/fast:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/build
+.PHONY : mpc_node_reset/fast
 
 #=============================================================================
 # Target rules for targets named talker
@@ -325,6 +338,33 @@ src/f1tenth_kinematic_probfct_supervisor.c.s:
 	$(MAKE) -f CMakeFiles/mpc_node2.dir/build.make CMakeFiles/mpc_node2.dir/src/f1tenth_kinematic_probfct_supervisor.c.s
 .PHONY : src/f1tenth_kinematic_probfct_supervisor.c.s
 
+src/f1tenth_reset_RL_kinematic_probfct.o: src/f1tenth_reset_RL_kinematic_probfct.c.o
+
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.o
+
+# target to build an object file
+src/f1tenth_reset_RL_kinematic_probfct.c.o:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/f1tenth_reset_RL_kinematic_probfct.c.o
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.c.o
+
+src/f1tenth_reset_RL_kinematic_probfct.i: src/f1tenth_reset_RL_kinematic_probfct.c.i
+
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.i
+
+# target to preprocess a source file
+src/f1tenth_reset_RL_kinematic_probfct.c.i:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/f1tenth_reset_RL_kinematic_probfct.c.i
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.c.i
+
+src/f1tenth_reset_RL_kinematic_probfct.s: src/f1tenth_reset_RL_kinematic_probfct.c.s
+
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.s
+
+# target to generate assembly for a file
+src/f1tenth_reset_RL_kinematic_probfct.c.s:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/f1tenth_reset_RL_kinematic_probfct.c.s
+.PHONY : src/f1tenth_reset_RL_kinematic_probfct.c.s
+
 src/mpc_controller.o: src/mpc_controller.cpp.o
 
 .PHONY : src/mpc_controller.o
@@ -351,6 +391,33 @@ src/mpc_controller.s: src/mpc_controller.cpp.s
 src/mpc_controller.cpp.s:
 	$(MAKE) -f CMakeFiles/mpc_node.dir/build.make CMakeFiles/mpc_node.dir/src/mpc_controller.cpp.s
 .PHONY : src/mpc_controller.cpp.s
+
+src/mpc_controller_reset_RL_old.o: src/mpc_controller_reset_RL_old.cpp.o
+
+.PHONY : src/mpc_controller_reset_RL_old.o
+
+# target to build an object file
+src/mpc_controller_reset_RL_old.cpp.o:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/mpc_controller_reset_RL_old.cpp.o
+.PHONY : src/mpc_controller_reset_RL_old.cpp.o
+
+src/mpc_controller_reset_RL_old.i: src/mpc_controller_reset_RL_old.cpp.i
+
+.PHONY : src/mpc_controller_reset_RL_old.i
+
+# target to preprocess a source file
+src/mpc_controller_reset_RL_old.cpp.i:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/mpc_controller_reset_RL_old.cpp.i
+.PHONY : src/mpc_controller_reset_RL_old.cpp.i
+
+src/mpc_controller_reset_RL_old.s: src/mpc_controller_reset_RL_old.cpp.s
+
+.PHONY : src/mpc_controller_reset_RL_old.s
+
+# target to generate assembly for a file
+src/mpc_controller_reset_RL_old.cpp.s:
+	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/src/mpc_controller_reset_RL_old.cpp.s
+.PHONY : src/mpc_controller_reset_RL_old.cpp.s
 
 src/mpc_controller_supervisor.o: src/mpc_controller_supervisor.cpp.o
 
@@ -494,13 +561,14 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... install/local"
+	@echo "... install"
 	@echo "... my_cpp_py_pkg_uninstall"
 	@echo "... mpc_node"
 	@echo "... mpc_node2"
+	@echo "... mpc_node_reset"
 	@echo "... talker"
 	@echo "... install/strip"
 	@echo "... listener"
-	@echo "... install"
 	@echo "... list_install_components"
 	@echo "... pure_pursuit"
 	@echo "... uninstall"
@@ -514,9 +582,15 @@ help:
 	@echo "... src/f1tenth_kinematic_probfct_supervisor.o"
 	@echo "... src/f1tenth_kinematic_probfct_supervisor.i"
 	@echo "... src/f1tenth_kinematic_probfct_supervisor.s"
+	@echo "... src/f1tenth_reset_RL_kinematic_probfct.o"
+	@echo "... src/f1tenth_reset_RL_kinematic_probfct.i"
+	@echo "... src/f1tenth_reset_RL_kinematic_probfct.s"
 	@echo "... src/mpc_controller.o"
 	@echo "... src/mpc_controller.i"
 	@echo "... src/mpc_controller.s"
+	@echo "... src/mpc_controller_reset_RL_old.o"
+	@echo "... src/mpc_controller_reset_RL_old.i"
+	@echo "... src/mpc_controller_reset_RL_old.s"
 	@echo "... src/mpc_controller_supervisor.o"
 	@echo "... src/mpc_controller_supervisor.i"
 	@echo "... src/mpc_controller_supervisor.s"
