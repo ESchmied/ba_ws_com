@@ -158,8 +158,8 @@ public:
     //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
     // Initialize GRAMPC
-    grampc_supervisor = init_grampc(8, 6);
-    grampc_backup = init_grampc(8, 6);
+    grampc_supervisor = init_grampc(6, 2);
+    grampc_backup = init_grampc(6, 2);
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 

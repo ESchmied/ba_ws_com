@@ -44,11 +44,11 @@ target_include_directories(mpc_node2 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-add_executable(mpc_node_reset src/mpc_controller_reset_RL_old.cpp src/f1tenth_reset_RL_kinematic_probfct.c)
-ament_target_dependencies(mpc_node_reset rclcpp nav_msgs ackermann_msgs visualization_msgs std_msgs)
-target_include_directories(mpc_node_reset PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+#add_executable(mpc_node_reset src/mpc_controller_reset_RL_old.cpp src/f1tenth_reset_RL_kinematic_probfct.c)
+#ament_target_dependencies(mpc_node_reset rclcpp nav_msgs ackermann_msgs visualization_msgs std_msgs)
+#target_include_directories(mpc_node_reset PUBLIC
+#    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#    $<INSTALL_INTERFACE:include>)
 
 add_library(grampc_lib STATIC IMPORTED)
 set_target_properties(grampc_lib PROPERTIES
@@ -57,12 +57,12 @@ set_target_properties(grampc_lib PROPERTIES
 
 target_link_libraries(mpc_node grampc_lib)
 target_link_libraries(mpc_node2 grampc_lib)
-target_link_libraries(mpc_node_reset grampc_lib)
+#target_link_libraries(mpc_node_reset grampc_lib)
 
 install(TARGETS 
     mpc_node
     mpc_node2
-    mpc_node_reset
+    #mpc_node_reset
     DESTINATION lib/${PROJECT_NAME})
     
 

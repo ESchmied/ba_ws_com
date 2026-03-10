@@ -55,7 +55,6 @@ CMAKE_BINARY_DIR = /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg
 # The main recursive "all" target.
 all: CMakeFiles/mpc_node.dir/all
 all: CMakeFiles/mpc_node2.dir/all
-all: CMakeFiles/mpc_node_reset.dir/all
 all: CMakeFiles/talker.dir/all
 all: CMakeFiles/listener.dir/all
 all: CMakeFiles/pure_pursuit.dir/all
@@ -72,7 +71,6 @@ preinstall:
 clean: CMakeFiles/my_cpp_py_pkg_uninstall.dir/clean
 clean: CMakeFiles/mpc_node.dir/clean
 clean: CMakeFiles/mpc_node2.dir/clean
-clean: CMakeFiles/mpc_node_reset.dir/clean
 clean: CMakeFiles/talker.dir/clean
 clean: CMakeFiles/listener.dir/clean
 clean: CMakeFiles/pure_pursuit.dir/clean
@@ -163,40 +161,13 @@ CMakeFiles/mpc_node2.dir/clean:
 .PHONY : CMakeFiles/mpc_node2.dir/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/mpc_node_reset.dir
-
-# All Build rule for target.
-CMakeFiles/mpc_node_reset.dir/all:
-	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/depend
-	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=9,10,11 "Built target mpc_node_reset"
-.PHONY : CMakeFiles/mpc_node_reset.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/mpc_node_reset.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles 3
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/mpc_node_reset.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles 0
-.PHONY : CMakeFiles/mpc_node_reset.dir/rule
-
-# Convenience name for target.
-mpc_node_reset: CMakeFiles/mpc_node_reset.dir/rule
-
-.PHONY : mpc_node_reset
-
-# clean rule for target.
-CMakeFiles/mpc_node_reset.dir/clean:
-	$(MAKE) -f CMakeFiles/mpc_node_reset.dir/build.make CMakeFiles/mpc_node_reset.dir/clean
-.PHONY : CMakeFiles/mpc_node_reset.dir/clean
-
-#=============================================================================
 # Target rules for target CMakeFiles/talker.dir
 
 # All Build rule for target.
 CMakeFiles/talker.dir/all:
 	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/depend
 	$(MAKE) -f CMakeFiles/talker.dir/build.make CMakeFiles/talker.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=16,17 "Built target talker"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=13,14 "Built target talker"
 .PHONY : CMakeFiles/talker.dir/all
 
 # Build rule for subdir invocation for target.
@@ -250,7 +221,7 @@ CMakeFiles/listener.dir/clean:
 CMakeFiles/pure_pursuit.dir/all:
 	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/depend
 	$(MAKE) -f CMakeFiles/pure_pursuit.dir/build.make CMakeFiles/pure_pursuit.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=14,15 "Built target pure_pursuit"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=11,12 "Built target pure_pursuit"
 .PHONY : CMakeFiles/pure_pursuit.dir/all
 
 # Build rule for subdir invocation for target.
@@ -304,7 +275,7 @@ CMakeFiles/uninstall.dir/clean:
 CMakeFiles/my_cpp_node.dir/all:
 	$(MAKE) -f CMakeFiles/my_cpp_node.dir/build.make CMakeFiles/my_cpp_node.dir/depend
 	$(MAKE) -f CMakeFiles/my_cpp_node.dir/build.make CMakeFiles/my_cpp_node.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=12,13 "Built target my_cpp_node"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles --progress-num=9,10 "Built target my_cpp_node"
 .PHONY : CMakeFiles/my_cpp_node.dir/all
 
 # Build rule for subdir invocation for target.

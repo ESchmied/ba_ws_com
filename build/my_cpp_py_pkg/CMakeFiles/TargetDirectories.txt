@@ -1,12 +1,11 @@
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/install/local.dir
-/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/install.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/my_cpp_py_pkg_uninstall.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/mpc_node.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/mpc_node2.dir
-/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/mpc_node_reset.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/talker.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/install/strip.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/listener.dir
+/home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/install.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/list_install_components.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/pure_pursuit.dir
 /home/emelies/ros_mpc_env/ba_ws_com/build/my_cpp_py_pkg/CMakeFiles/uninstall.dir

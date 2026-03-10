@@ -650,7 +650,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/my_cpp_py_pkg_uninstall.dir/DependInfo.cmake"
   "CMakeFiles/mpc_node.dir/DependInfo.cmake"
   "CMakeFiles/mpc_node2.dir/DependInfo.cmake"
-  "CMakeFiles/mpc_node_reset.dir/DependInfo.cmake"
   "CMakeFiles/talker.dir/DependInfo.cmake"
   "CMakeFiles/listener.dir/DependInfo.cmake"
   "CMakeFiles/pure_pursuit.dir/DependInfo.cmake"

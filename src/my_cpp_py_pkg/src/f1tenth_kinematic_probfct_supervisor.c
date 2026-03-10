@@ -554,7 +554,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
     out[0] = x[3] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
-    out[1] = -x[3];                         // 0 <= v
+    out[1] = -x[3];                         // 0 <= |v| darf nicht stehen bleiben /davor 0<= -x[3]
 
     //border constraint 
     //project car pos onto centerline
@@ -612,7 +612,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //printf("car_width: %f\n" , car_width);
     
     //das kleinere minus das größere
-    out[2] = POW2(distance_center_car) - POW2(distance_border_center -  0.5*car_width); //abstand auto-centerline < abstand centerline-border - car_width 
+    out[2] = POW2(distance_center_car) - POW2(distance_border_center -  car_width); //abstand auto-centerline < abstand centerline-border - car_width 
     //out[2] = distance_center_car - (distance_border_center - car_width );
     //out[2] = distance_center_car - 0.5; //probe weise Schlauch um die centerline als Constraint
 
