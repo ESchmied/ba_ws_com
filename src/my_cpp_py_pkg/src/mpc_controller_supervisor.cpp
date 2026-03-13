@@ -64,10 +64,10 @@ constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
 
 // Cost Weights
-constexpr typeRNum Q_POS = 0.5; //0.5
-constexpr typeRNum Q_THETA = 0.3; //0.3
+constexpr typeRNum Q_POS = 0.6; //0.5
+constexpr typeRNum Q_THETA = 0.4; //0.3
 constexpr typeRNum Q_VEL = 0.1; //0.1
-constexpr typeRNum R_STEER = 0.1; //0.1
+constexpr typeRNum R_STEER = 0.2; //0.1
 constexpr typeRNum R_ACCEL = 0.02; //0.02
 
 struct my_state{
@@ -158,8 +158,11 @@ public:
     //printf("vor init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
     // Initialize GRAMPC
-    grampc_supervisor = init_grampc(6, 2);
-    grampc_backup = init_grampc(6, 2);
+    //mpc_supervisor = init_grampc_supervisor(6, 2);
+    //mpc_backup = init_grampc_backup(6, 2);
+    init_grampc_supervisor(8, 4);
+    init_grampc_backup(8, 4);
+
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
 
@@ -194,9 +197,10 @@ private:
   
 
   // GRAMPC pointer
+  //TYPE_GRAMPC_POINTER(mpc_supervisor)
+  //TYPE_GRAMPC_POINTER(mpc_backup)
   TYPE_GRAMPC_POINTER(grampc_supervisor)
   TYPE_GRAMPC_POINTER(grampc_backup)
-  
 
   // Flat reference path (each waypoint stored as [x, y])
   vector<double> flat_path_points_;
@@ -335,6 +339,7 @@ private:
       }
     }
 
+    //printf("[CPP] num_points: %d, nearest_idx_cpp: %d\n", num_points, nearest_idx);
     return nearest_idx;
   }
 /* 
@@ -369,53 +374,104 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
   // --------------------------
   // GRAMPC initialization (set parameters, dt, horizon, etc.)
-  typeGRAMPC* init_grampc(int max_grad_iter = 6 , int max_mult_iter = 2) {
+  typeGRAMPC* init_grampc_supervisor(int max_grad_iter = 6 , int max_mult_iter = 2) {
     // Init grampc
-    TYPE_GRAMPC_POINTER(grampc)
+    //TYPE_GRAMPC_POINTER(grampc_supervisor)
     //typeUSERPARAM *userparam = NULL;
     typeUSERPARAM *userparam = static_cast<void*>(&user_param_); //&userparam == memory address of userparam
-    grampc_init(&grampc, userparam);
+    grampc_init(&grampc_supervisor, userparam);
 
     // Set initial state and control limits
     ctypeRNum x0[NX] = { 0.0, 0.0, 0.0 , 0.0};
     ctypeRNum umin[NU] = {YAW_MIN, A_MIN};
     ctypeRNum umax[NU] = {YAW_MAX, A_MAX};
 
-    grampc_setparam_real_vector(grampc, "x0", x0);
-    grampc_setparam_real_vector(grampc, "umin", umin);
-    grampc_setparam_real_vector(grampc, "umax", umax);
+    grampc_setparam_real_vector(grampc_supervisor, "x0", x0);
+    grampc_setparam_real_vector(grampc_supervisor, "umin", umin);
+    grampc_setparam_real_vector(grampc_supervisor, "umax", umax);
 
-    grampc_setparam_real(grampc, "dt", DT);
-    grampc_setparam_real(grampc, "t0", 0.0);
+    grampc_setparam_real(grampc_supervisor, "dt", DT);
+    grampc_setparam_real(grampc_supervisor, "t0", 0.0);
 
-    grampc_setopt_int(grampc, "Nhor", NHOR);
-    grampc_setparam_real(grampc, "Thor", THOR);
+    grampc_setopt_int(grampc_supervisor, "Nhor", NHOR);
+    grampc_setparam_real(grampc_supervisor, "Thor", THOR);
 
     //Important!! Without it the car drives serpentine-like 
     //works without too, but is not as smooth
-    grampc_setopt_string(grampc, "ShiftControl", "off");  //off
+    grampc_setopt_string(grampc_supervisor, "ShiftControl", "off");  //off
 
     //maby only in v2.3
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
-    grampc_setopt_int(grampc, "MaxGradIter", max_grad_iter);  //6 //4 DEFAULT 2 //inner loop 
-    grampc_setopt_int(grampc, "MaxMultIter", max_mult_iter); //2 //2 DEFAULT 1 //outer loop
+    grampc_setopt_int(grampc_supervisor, "MaxGradIter", max_grad_iter);  //6 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc_supervisor, "MaxMultIter", max_mult_iter); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
-    grampc_setopt_string(grampc, "InequalityConstraints", "on");
-    grampc_setopt_real(grampc, "PenaltyIncreaseFactor", 1.0); //works with 1.0
-    grampc_setopt_real(grampc, "PenaltyDecreaseFactor", 1.0); //works with 1.0
-    grampc_setopt_real(grampc, "PenaltyMin", 1); //works with 1
+    grampc_setopt_string(grampc_supervisor, "InequalityConstraints", "on");
+    grampc_setopt_real(grampc_supervisor, "PenaltyIncreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc_supervisor, "PenaltyDecreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc_supervisor, "PenaltyMin", 1); //works with 1
 
 
 
     //tolerance for the constraints,
     //all constraints are satisfied within the tolerance defined by ConstraintsAbsTol
-    ctypeRNum ConstraintsAbsTol[1] = { 0 }; //1e-2 works with 0
-    grampc_setopt_real_vector(grampc, "ConstraintsAbsTol", ConstraintsAbsTol);
+    ctypeRNum ConstraintsAbsTol[1] = {1e-2}; //1e-2 works with 0
+    grampc_setopt_real_vector(grampc_supervisor, "ConstraintsAbsTol", ConstraintsAbsTol);
 
-    return grampc;
+    return grampc_supervisor;
+  }
+
+  // --------------------------
+  // GRAMPC initialization (set parameters, dt, horizon, etc.)
+  typeGRAMPC* init_grampc_backup(int max_grad_iter = 6 , int max_mult_iter = 2) {
+    // Init grampc
+    //TYPE_GRAMPC_POINTER(grampc_backup)
+    //typeUSERPARAM *userparam = NULL;
+    typeUSERPARAM *userparam = static_cast<void*>(&user_param_); //&userparam == memory address of userparam
+    grampc_init(&grampc_backup, userparam);
+
+    // Set initial state and control limits
+    ctypeRNum x0[NX] = { 0.0, 0.0, 0.0 , 0.0};
+    ctypeRNum umin[NU] = {YAW_MIN, A_MIN};
+    ctypeRNum umax[NU] = {YAW_MAX, A_MAX};
+
+    grampc_setparam_real_vector(grampc_backup, "x0", x0);
+    grampc_setparam_real_vector(grampc_backup, "umin", umin);
+    grampc_setparam_real_vector(grampc_backup, "umax", umax);
+
+    grampc_setparam_real(grampc_backup, "dt", DT);
+    grampc_setparam_real(grampc_backup, "t0", 0.0);
+
+    grampc_setopt_int(grampc_backup, "Nhor", NHOR);
+    grampc_setparam_real(grampc_backup, "Thor", THOR);
+
+    //Important!! Without it the car drives serpentine-like 
+    //works without too, but is not as smooth
+    grampc_setopt_string(grampc_backup, "ShiftControl", "off");  //off
+
+    //maby only in v2.3
+    //grampc_setopt_string(grampc, "Integrator", "discrete");
+
+    // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
+    grampc_setopt_int(grampc_backup, "MaxGradIter", max_grad_iter);  //6 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc_backup, "MaxMultIter", max_mult_iter); //2 //2 DEFAULT 1 //outer loop
+
+    //penalty for contraints 
+    grampc_setopt_string(grampc_backup, "InequalityConstraints", "on");
+    grampc_setopt_real(grampc_backup, "PenaltyIncreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc_backup, "PenaltyDecreaseFactor", 1.0); //works with 1.0
+    grampc_setopt_real(grampc_backup, "PenaltyMin", 1); //works with 1
+
+
+
+    //tolerance for the constraints,
+    //all constraints are satisfied within the tolerance defined by ConstraintsAbsTol
+    ctypeRNum ConstraintsAbsTol[1] = {1e-2}; //1e-2 works with 0
+    grampc_setopt_real_vector(grampc_backup, "ConstraintsAbsTol", ConstraintsAbsTol);
+
+    return grampc_backup;
   }
 
   my_state get_next_state(my_state state0, my_input input0, double t){
@@ -485,6 +541,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //int nearest_outer_border_idx = getNearestIndex(x,y, flat_outer_border_points_);
 
     auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
+
     auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+100);
 
     //publish_single_point("nearest_inner_border", flat_inner_border_points_[nearest_inner_border_idx*2], flat_inner_border_points_[nearest_inner_border_idx*2 +1]);
@@ -500,6 +557,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     // Update reference trajectory of user parameters
     user_param_.ref_traj = ref_traj_.data();
     user_param_.ref_length = (int)ref_traj_.size()/3;
+    //printf("ref_traj_data: first_pt: %f, %f, second_pt: %f, %f\n", ref_traj_[0], ref_traj_[1], ref_traj_[2], ref_traj_[3]);
 
     user_param_.center_traj = center_traj_.data();
     user_param_.center_traj_len = (int)center_traj_.size()/3;
@@ -512,30 +570,34 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     user_param_.inner_border = flat_inner_border_points_3d.data();
     user_param_.inner_border_len = (int)flat_inner_border_points_3d.size()/3;
 
-    //start backup grampc
-    ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
-    grampc_setparam_real_vector(grampc_backup, "x0", x0);
-    grampc_run(grampc_backup);
-    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
-
-    // Extract backup control command.
-    backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
-    backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
-
-    double nearest_center_pt_x = center_traj_[0]; //use nearest point in traj should equal first point of traj
-    double nearest_center_pt_y = center_traj_[1];
-    double nearest_center_pt_yaw = center_traj_[2];
-
+    //to avoid both MPC running at the same time
+    //overloading in Userparam results in NAN sol
     if (backup_flag){
+      //start backup grampc
+      ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
+      grampc_setparam_real_vector(grampc_backup, "x0", x0);
+      grampc_run(grampc_backup);
+      //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
+      //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+
+      // Extract backup control command.
+      backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
+      backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+
+      double nearest_center_pt_x = center_traj_[0]; //use nearest point in traj should equal first point of traj
+      double nearest_center_pt_y = center_traj_[1];
+      double nearest_center_pt_yaw = center_traj_[2];
+
       //printf("backup_flag == true \n");
       auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
       drive_msg.drive.speed = backup_v;
       drive_msg.drive.steering_angle = backup_steering_angle;
       drive_publisher_->publish(drive_msg);
 
-      publish_collision_flag();
+      //publish_collision_flag();
       RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
 
+      //timer so RL has time to receive collisin flag
       auto current_time = std::chrono::steady_clock::now();
       auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
          
@@ -551,6 +613,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
    
 
     // Optionally publish predicted trajectory markers.
+    //printf("finished publish drive msg");
     publish_current_ref_trajectory();
     publish_border_points("inner_border", flat_inner_border_points_); //why two different variables for userparam and publishing
     publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
@@ -573,55 +636,58 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     my_input input_pp;
     input_pp.steer= msg->drive.steering_angle;
     input_pp.speed = msg->drive.speed;
-  
-    my_state state_t = get_next_state(current_state, input_pp, DT);
-    //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
-
     
-    // Update next state.
-    ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
-    grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
-    // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-    // grampc_setparam_real(grampc, "t0", t);
-
-    // Run GRAMPC.
-    //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
-    grampc_run(grampc_supervisor);
-    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
-    //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
-
-    bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
-    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
-    infeasible_counter += infeasible_flag;
-    //printf("infeasible_counter: %d \n", infeasible_counter);
-    bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
-    
-    
-    // Extract control command.
-    double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-    double acceleration = grampc_supervisor->sol->unext[1];
-    double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
-
-    //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
-    // for (int i = 0; i < NHOR; ++i)
-    // {
-    //   double x_pred = grampc->rws->x[i * NX];
-    //   double y_pred = grampc->rws->x[i * NX + 1];
-    //   double yaw_pred = grampc->rws->x[i * NX + 2];
-    //   double v_pred = grampc->rws->x[i * NX + 3];
-    //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
-    //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
-    // }
-
-
-
+    //to avoid both mpc running at the same time
     if(backup_flag == false){
+      my_state state_t = get_next_state(current_state, input_pp, DT);
+      //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
+
+    
+      // Update next state.
+      ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
+      grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
+      //printf("xt: state_t.x: %f, state_t.y: %f, state_t.yaw: %f, state_t.v: %f \n", state_t.x, state_t.y, state_t.yaw, state_t.v);
+      // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
+      // grampc_setparam_real(grampc, "t0", t);
+
+      // Run GRAMPC.
+      //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
+      grampc_run(grampc_supervisor);
+      //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
+      //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+
+      bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
+      infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
+      infeasible_counter += infeasible_flag;
+      //printf("infeasible_counter: %d \n", infeasible_counter);
+      bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
+      
+      
+      // Extract control command.
+      double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
+      double acceleration = grampc_supervisor->sol->unext[1];
+      double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
+
+      //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
+      // for (int i = 0; i < NHOR; ++i)
+      // {
+      //   double x_pred = grampc->rws->x[i * NX];
+      //   double y_pred = grampc->rws->x[i * NX + 1];
+      //   double yaw_pred = grampc->rws->x[i * NX + 2];
+      //   double v_pred = grampc->rws->x[i * NX + 3];
+      //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
+      //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
+      // }
+
+
+
+    
       //printf("backup_flag == false \n");
       //found a feasible solution
       if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-       /*  backup_steering_angle = steering_angle;
+        backup_steering_angle = steering_angle;
         backup_v = v_next;
- */ 
+ 
         auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
         drive_msg.drive.speed = input_pp.speed;
         drive_msg.drive.steering_angle = input_pp.steer;
@@ -654,7 +720,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
         drive_msg.drive.steering_angle = 0.0;
         drive_publisher_->publish(drive_msg);
 
-        RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...");
+        RCLCPP_INFO(this->get_logger(), "Invalid MPC calculations. Stopping car and shutting down...%f,  %f", v_next, steering_angle);
         rclcpp::sleep_for(std::chrono::milliseconds(500));
         rclcpp::shutdown();
       }

@@ -26,10 +26,10 @@ extern "C" {
 using namespace std;
 
 // Waypoint file, adjust as needed 
-const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
-const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_centerline.csv";
-const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_inner_border.csv";
-const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_outer_border.csv";
+const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_race_line.csv"; //raceline funktioniert nicht, weil dann die constraint berechnung nicht mehr funktioniert
+const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
+const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_inner_border.csv";
+const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_outer_border.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
@@ -49,9 +49,9 @@ constexpr typeRNum A_MIN = -1.5;      // Acceleration  ursprünglich -1/1
 constexpr typeRNum A_MAX = 1.5;
 
 // OCP Parameters dt*(Nhor-1) = Thor
-constexpr typeRNum DT = 0.05;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
+constexpr typeRNum DT = 0.25;  //0.05 ursprünglich 0.01 je höher desto weniger oszilliert das auto
 constexpr typeRNum NHOR = 11; //51
-constexpr typeRNum THOR = 0.55; //2.5
+constexpr typeRNum THOR = 2.5; //2.5
 
 constexpr typeInt NX = 4; //x,y,yaw,v
 constexpr typeInt NU = 2; // steer, a
@@ -70,6 +70,10 @@ class MPCNode : public rclcpp::Node {
 public:
   MPCNode() : Node("mpc_node") {
     RCLCPP_INFO(this->get_logger(), "MPCNode initialized");
+
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+    auto qos_sensor = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 3), qos_profile);
+
 
     // Load the reference path from CSV into a flat vector of doubles.
     flat_path_points_ = load_flat_pathpoints(waypoint_file);
@@ -113,11 +117,11 @@ public:
     
 
     // Subscribe to odometry.
-    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("ego_racecar/odom", 10, 
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", qos_sensor, 
       std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
 
     // Other publishers…
-    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("drive", 10);
+    drive_publisher_ = this->create_publisher<ackermann_msgs::msg::AckermannDriveStamped>("/drive", 10);
     trajectory_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_trajectory", 10);
     active_ref_publisher_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("mpc_ref_traj", 10);
     reference_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("reference_path", 10);
@@ -126,7 +130,7 @@ public:
     
     //to avoid overload of rviz not published
     //publish_reference_path(); //load in the reference path in RViz
-    single_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 10);
+    single_point_publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("next_point", 1);
 
     // Initialize GRAMPC
     init_grampc();
@@ -318,8 +322,8 @@ private:
     //grampc_setopt_string(grampc, "Integrator", "discrete");
 
     // Set number of gradient iterations (example) not to high or else the calculations take too long and the mpc lags behind the real car and starts over compensating
-    grampc_setopt_int(grampc, "MaxGradIter", 8);  //7 //4 DEFAULT 2 //inner loop 
-    grampc_setopt_int(grampc, "MaxMultIter", 3); //2 //2 DEFAULT 1 //outer loop
+    grampc_setopt_int(grampc, "MaxGradIter", 4);  //7 //4 DEFAULT 2 //inner loop 
+    grampc_setopt_int(grampc, "MaxMultIter", 2); //2 //2 DEFAULT 1 //outer loop
 
     //penalty for contraints 
     grampc_setopt_string(grampc, "InequalityConstraints", "on");
@@ -362,8 +366,8 @@ private:
     //int nearest_inner_border_idx = getNearestIndex(x,y, flat_inner_border_points_);
     //int nearest_outer_border_idx = getNearestIndex(x,y, flat_outer_border_points_);
 
-    auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
-    auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+100);
+    auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+50); // TODO: How many points ahead are necessary?
+    auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+50);
 
     //publish_single_point("nearest_inner_border", flat_inner_border_points_[nearest_inner_border_idx*2], flat_inner_border_points_[nearest_inner_border_idx*2 +1]);
     //publish_single_point("nearest_outer_border", flat_outer_border_points_[nearest_outer_border_idx*2], flat_outer_border_points_[nearest_outer_border_idx*2 +1]);
@@ -465,6 +469,7 @@ private:
     publish_border_points("outer_border", flat_outer_border_points_); //seems to be the same in simluation 
 
     publish_single_point("next_point", flat_path_points_[(nearest_idx+1)*2], flat_path_points_[(nearest_idx+1)*2 +1]);
+    publish_single_point("next_point", x, y);
 
     publish_border("inner_border_line", flat_inner_border_points_);
     publish_border("outer_border_line", flat_outer_border_points_);

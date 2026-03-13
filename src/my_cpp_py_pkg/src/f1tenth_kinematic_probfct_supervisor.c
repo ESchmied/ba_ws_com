@@ -38,7 +38,7 @@
 #include "math.h"
 #include "my_cpp_py_pkg/userparam.h"
 
-#if USE_typeRNum == USE_FLOAT
+#if USE_typeRNum == USE_DOUBLE
 #define SIN(a)		sinf(a)
 #define COS(a)		cosf(a)
 #define TAN(a)      tanf(a)
@@ -87,7 +87,7 @@ typeInt getNearestIndex(double current_x, double current_y, const double* ref, i
             nearest_idx = i;
         }
     }
-
+    //printf("nearest_idx = %d \n", nearest_idx);
     return nearest_idx;
 }
 
@@ -169,6 +169,7 @@ my_point orhtogonal_proj(my_point a, my_point b, my_point x){
     double a_to_b_length = sqrt(POW2(a_to_b_x) + POW2(a_to_b_y));
     a_to_b_x /= a_to_b_length;
     a_to_b_y /= a_to_b_length;
+    //printf("a_to_b_length = %f \n", a_to_b_length);
 
     // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
     //proj ist eine relative Länge von a_to_b
@@ -329,6 +330,7 @@ void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     out[1] = x[3] * SIN(x[2]);            // dy/dt = v * sin(theta)
     out[2] = (x[3] / L) * TAN(u[0]);      // dtheta/dt = v / L * tan(steering)
     out[3] = u[1];                        // dv/dt = a
+    //printf("ffct: u[0]: %f,u[1]:%f, x[2]: %f, x[3]: %f, dx/dt=%.3f, dy/dt=%3.f, dtheta/dt=%.3f, dv/dt=%.3f, \n", u[0], u[1], x[2], x[3], out[0], out[1], out[2], out[3]);
 }
 
 /** Jacobian df/dx multiplied by vector vec, i.e. (df/dx)^T*vec or vec^T*(df/dx) **/
@@ -344,7 +346,7 @@ void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
     out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;      //vec[0]*cos(theta) + vec[1]*sin(theta) + vec[2]*tan(steering_angle)/L
 
     //t wird nicht verwendet?
-    //printf("dfdx: yaw=%.3f, v=%3.f, vec0=%.3f, vec1=%.3f, vec2=%.3f \n", x[2], x[3], vec[0], vec[1], vec[2]);
+    //printf("dfdx: yaw=%.3f, v=%.3f, vec0=%.3f, vec1=%.3f, vec2=%.3f \n", x[2], x[3], vec[0], vec[1], vec[2]);
 
 }
 /** Jacobian df/du multiplied by vector vec, i.e. (df/du)^T*vec or vec^T*(df/du) **/
@@ -355,7 +357,7 @@ void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
 
     out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
     out[1] = vec[3];                                        //a = 1*vec[3]
-
+    //printf("dfdu: steering: %f, vec[3]: %f\n", out[0], out[1]);
 }
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
 void dfdp_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p, typeUSERPARAM *userparam)
@@ -373,20 +375,25 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     int nearest_idx = getNearestIndex(x[0], x[1], ref_traj, ref_length);
     int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length? falls liste zuende 
-
+    //printf("ref_length lfct:%d \n ", ref_length);
+    //printf("nearest_idx: %d, next_idx:%d\n", nearest_idx, next_idx);
     //printf("nearest idx: %d, next idx: %d t: %f \n", nearest_idx, next_idx, t);
 
     // Coords of nearest point
     double nearest_x = ref_traj[3*nearest_idx];
     double nearest_y = ref_traj[3*nearest_idx + 1]; 
+    //printf("nearest_pt: %f, %f \n", nearest_x, nearest_y);
 
     // Coords of next point
     double next_x = ref_traj[3*next_idx];
     double next_y = ref_traj[3*next_idx + 1];
+    //printf("next_pt: %f, %f \n", next_x, next_y);
 
     // Vector entries from nearest to current position
     double nearest_to_current_x = x[0] - nearest_x;
     double nearest_to_current_y = x[1] - nearest_y;
+    //printf("current_x: %f, current_y: %f, t: %f\n", x[0], x[1], t);
+    //printf("nearest_to_current_x = %f, nearest_to_current_y = %f \n", nearest_to_current_x, nearest_to_current_y);
 
     // Normalized vector entries from nearest to next point
     double nearest_to_next_x = next_x - nearest_x;
@@ -395,12 +402,14 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 
     nearest_to_next_x /= nearest_to_next_length;
     nearest_to_next_y /= nearest_to_next_length;
-
+    //printf("nearest_to_next_length = %f \n", nearest_to_next_length);
+    //printf("nearest_to_next_x = %f, nearest_to_next_y = %f \n", nearest_to_next_x, nearest_to_next_y);
     // Projection of vector nearest_to_current onto nearest_to_next, resulting in the reference x and y
     double proj = (nearest_to_current_x * nearest_to_next_x) + (nearest_to_current_y * nearest_to_next_y); // dot(ntc, ntn)
-
+    //printf("proj = %f \n", proj);
     double x_ref = nearest_x + proj * nearest_to_next_x; 
     double y_ref = nearest_y + proj * nearest_to_next_y;
+    //printf("nearest_x = %f \n", nearest_x);
 
     // The yaw reference can be taken from the provided trajectory at nearest idx
     double yaw_ref = ref_traj[3*nearest_idx + 2];
@@ -466,6 +475,7 @@ void dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     out[1] = param->Q_pos   * 2.0 * (x[1] - y_ref);
     out[2] = param->Q_theta * 2.0 * (wrapToPi(x[2] - yaw_ref));
     out[3] = param->Q_vel   * 2.0 * (x[3] - param->max_velocity); 
+    //printf("cost gradients= %f, %f, %f, %f\n", out[0], out[1], out[2], out[3]);
 
 }
 /** Gradient dl/du **/
@@ -612,9 +622,9 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //printf("car_width: %f\n" , car_width);
     
     //das kleinere minus das größere
-    out[2] = POW2(distance_center_car) - POW2(distance_border_center -  car_width); //abstand auto-centerline < abstand centerline-border - car_width 
+    //out[2] = POW2(distance_center_car) - POW2(distance_border_center - 0.5); //abstand auto-centerline < abstand centerline-border - car_width 
     //out[2] = distance_center_car - (distance_border_center - car_width );
-    //out[2] = distance_center_car - 0.5; //probe weise Schlauch um die centerline als Constraint
+    out[2] = distance_center_car - 1; //probe weise Schlauch um die centerline als Constraint
 
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
@@ -658,15 +668,16 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     //ableitung h nach x mal vector (but why?)
     //output sortiert nach der X[] variable die abgeleitet wird out[0] ^= x[0]'
     //ableitung für quadrierte Contraints
-    out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
-    out[1] = -2* (proj_center_point.y - x[1])* vec[2];
-
+    //out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    //out[1] = -2* (proj_center_point.y - x[1])* vec[2];
+    
     //ableitung der normalen Constraints
-    //out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[2];
-    //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
-   
+    out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[2];
+    out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
+    
     out[2] = 0;
     out[3] = vec[0]- vec[1]; //reine optimierung kommt vom gradient based mpc
+    //printf("vec[2]: %lf \n", vec[2]);
 
 }
 /** Jacobian dh/du multiplied by vector vec, i.e. (dh/du)^T*vec or vec^T*(dg/du) **/

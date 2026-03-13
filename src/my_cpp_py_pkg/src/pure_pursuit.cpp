@@ -34,8 +34,8 @@ using namespace std;
 //using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-const float LOOKAHEAD_DISTANCE = 1.5;
-const float VELOCITY = 3;
+const float LOOKAHEAD_DISTANCE = 0.3;
+const float VELOCITY = 2;
 const float MAX_STEERING_ANGLE = 0.4;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
@@ -66,7 +66,7 @@ public:
     last_visited_waypoints.clear();
     steering_angle = 0;
 
-    string file_name = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv";
+    string file_name = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_race_line.csv";
     ifstream Raceline_CSV;
     Raceline_CSV.open(file_name);
 
@@ -313,7 +313,7 @@ private:
 
 
 
-    if(go_drive){
+    //if(go_drive){
 
       ackermann_msgs::msg::AckermannDriveStamped drive_msg;
       ackermann_msgs::msg::AckermannDrive drive;
@@ -328,7 +328,7 @@ private:
       //cout<<"driving";
 
       
-    }
+    //}
     
 
   }
