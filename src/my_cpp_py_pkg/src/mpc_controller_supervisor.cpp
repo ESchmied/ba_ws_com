@@ -34,8 +34,8 @@ using namespace std;
 //const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Spielberg_map_filled_race_line.csv"; 
 const std::string waypoint_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
 const std::string centerline_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_centerline.csv";
-const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_inner_border.csv";
-const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_outer_border.csv";
+const std::string inner_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_inner_border_0.3.csv";
+const std::string outer_border_file = "/home/emelies/ros_mpc_env/ba_ws_com/maps/Austin_map_outer_border_0.3.csv";
 
 // Vehicle Parameters
 constexpr typeRNum L = 0.33;        //0.33 /0.58[m] (Länge)
@@ -160,8 +160,8 @@ public:
     // Initialize GRAMPC
     //mpc_supervisor = init_grampc_supervisor(6, 2);
     //mpc_backup = init_grampc_backup(6, 2);
-    init_grampc_supervisor(7, 3);
-    init_grampc_backup(7, 3);
+    init_grampc_supervisor(8, 3);
+    init_grampc_backup(8, 3);
 
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
@@ -419,7 +419,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
     //tolerance for the constraints,
     //all constraints are satisfied within the tolerance defined by ConstraintsAbsTol
-    ctypeRNum ConstraintsAbsTol[1] = {1e-2}; //1e-2 works with 0
+    ctypeRNum ConstraintsAbsTol[1] = {0}; //1e-2 works with 0
     grampc_setopt_real_vector(grampc_supervisor, "ConstraintsAbsTol", ConstraintsAbsTol);
 
     return grampc_supervisor;
@@ -554,9 +554,9 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     //int nearest_inner_border_idx = getNearestIndex(x,y, flat_inner_border_points_);
     //int nearest_outer_border_idx = getNearestIndex(x,y, flat_outer_border_points_);
 
-    auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+100); // TODO: How many points ahead are necessary?
+    auto ref_traj_ = computeReferenceTrajectory(flat_path_points_, nearest_idx, NHOR+50); // TODO: How many points ahead are necessary?
 
-    auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+100);
+    auto center_traj_ = computeReferenceTrajectory(flat_center_points_, nearest_center_idx, NHOR+50);
 
     //publish_single_point("nearest_inner_border", flat_inner_border_points_[nearest_inner_border_idx*2], flat_inner_border_points_[nearest_inner_border_idx*2 +1]);
     //publish_single_point("nearest_outer_border", flat_outer_border_points_[nearest_outer_border_idx*2], flat_outer_border_points_[nearest_outer_border_idx*2 +1]);
@@ -665,39 +665,38 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     input_pp.speed = msg->drive.speed;
     
     //to avoid both mpc running at the same time
-    if(backup_flag == false){
-      my_state state_t = get_next_state(current_state, input_pp, DT);
-      //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
-
+    my_state state_t = get_next_state(current_state, input_pp, DT);
+    //grampc->userparam = static_cast<void*>(&user_param_); //jetzt direkt in init_grampc()
     
-      // Update next state.
-      ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
-      grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
-      //printf("xt: state_t.x: %f, state_t.y: %f, state_t.yaw: %f, state_t.v: %f \n", state_t.x, state_t.y, state_t.yaw, state_t.v);
-      // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-      // grampc_setparam_real(grampc, "t0", t);
-
-      // Run GRAMPC.
-      //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
-      grampc_run(grampc_supervisor);
-      //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
-      //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
-
-      bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
-      infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
-      infeasible_counter += infeasible_flag;
-      //printf("infeasible_counter: %d \n", infeasible_counter);
-      bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
-      
-      
-      // Extract control command.
-      double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
-      double acceleration = grampc_supervisor->sol->unext[1];
-      double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
-
-      //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
-      // for (int i = 0; i < NHOR; ++i)
-      // {
+    
+    // Update next state.
+    ctypeRNum xt[NX] = {state_t.x, state_t.y, state_t.yaw, state_t.v};
+    grampc_setparam_real_vector(grampc_supervisor, "x0", xt);
+    //printf("xt: state_t.x: %f, state_t.y: %f, state_t.yaw: %f, state_t.v: %f \n", state_t.x, state_t.y, state_t.yaw, state_t.v);
+    // typeRNum t = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
+    // grampc_setparam_real(grampc, "t0", t);
+    
+    // Run GRAMPC.
+    //RCLCPP_INFO(this->get_logger(), "Starting GRAMPC run...");
+    grampc_run(grampc_supervisor);
+    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_supervisor run. Status %d", grampc_supervisor->sol->status);
+    //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+    
+    bool infeasible_flag = grampc_supervisor->sol->status & 256; // 256 is the bitmask for STATUS_INFEASIBLE
+    infeasible_counter *= infeasible_flag; // = * true  damit er sich zurücksetzt falls es doch gelöst wurde 
+    infeasible_counter += infeasible_flag;
+    //printf("infeasible_counter: %d \n", infeasible_counter);
+    bool infeasible = infeasible_counter > 0; //>20 works for driving Only set if the flag was active for multiple runs
+    
+    
+    // Extract control command.
+    double steering_angle = grampc_supervisor->sol->unext[0]; //Extract the solution for k+1 from Grampc for the correct steering angle
+    double acceleration = grampc_supervisor->sol->unext[1];
+    double v_next = grampc_supervisor->sol->xnext[3]; // Extract the velocity state of the next solution step
+    
+    //RCLCPP_INFO(this->get_logger(), "Published: Steering=%.2f, Speed=%.2f, Acceleration=%.2f", steering_angle, v_next, acceleration);
+    // for (int i = 0; i < NHOR; ++i)
+    // {
       //   double x_pred = grampc->rws->x[i * NX];
       //   double y_pred = grampc->rws->x[i * NX + 1];
       //   double yaw_pred = grampc->rws->x[i * NX + 2];
@@ -705,10 +704,11 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       //   double dist = sqrt(POW(x_pred-x,2) + POW(y_pred-y,2));
       //   RCLCPP_INFO(this->get_logger(), "Step %d: x=%.3f, y=%.3f, yaw=%.2f, v=%.3f, dist=%.3f", i, x_pred, y_pred, yaw_pred, v_pred, dist);
       // }
-
-
-
-    
+      
+      
+      
+      
+    if(backup_flag == false){
       //printf("backup_flag == false \n");
       //found a feasible solution
       if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
@@ -941,11 +941,11 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  //rclcpp::Node::SharedPtr node = std::make_shared<MPCNode>();
-  //rclcpp::executors::MultiThreadedExecutor executor;
-  //executor.add_node(node);
-  //executor.spin();
-  rclcpp::spin(std::make_shared<MPCNode>());
+  rclcpp::Node::SharedPtr node = std::make_shared<MPCNode>();
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node);
+  executor.spin();
+  //rclcpp::spin(std::make_shared<MPCNode>());
   rclcpp::shutdown();
   return 0;
 }
