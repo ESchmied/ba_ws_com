@@ -133,7 +133,7 @@ public:
     
 
     // Subscribe to odometry.
-    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", 10, 
+    odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", rclcpp::SensorDataQoS(), 
       std::bind(&MPCNode::odom_callback, this, std::placeholders::_1));
 
     //subscribe to pure_pursuit control outputs 
@@ -160,8 +160,8 @@ public:
     // Initialize GRAMPC
     //mpc_supervisor = init_grampc_supervisor(6, 2);
     //mpc_backup = init_grampc_backup(6, 2);
-    init_grampc_supervisor(8, 4);
-    init_grampc_backup(8, 4);
+    init_grampc_supervisor(7, 3);
+    init_grampc_backup(7, 3);
 
 
     //printf("nach init: grampc_supervisor memory adress: %p, grampc_backup memory adress %p\n", grampc_supervisor, grampc_backup);
@@ -219,7 +219,9 @@ private:
 
   int infeasible_counter = 0;
   bool backup_flag = false;
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> start_time_backup_mpc;
+  std::chrono::time_point<std::chrono::steady_clock> start_time_control_msg;
+
 
   double backup_steering_angle;
   double backup_v;
@@ -517,6 +519,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
     // Extract state from odometry.
     //my_state current_state;
+
     current_state.x = msg->pose.pose.position.x;
     current_state.y = msg->pose.pose.position.y;
     current_state.v = msg->twist.twist.linear.x; //maby nicht in vicon msgs enthalten current_state.
@@ -531,6 +534,17 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw); //warum hat die Matrix keinen Namen?
 
     current_state.yaw = yaw;
+    auto current_time = std::chrono::steady_clock::now();
+    auto duration_since_last_control_msg = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time_control_msg);
+    if(backup_flag==false && duration_since_last_control_msg > std::chrono::milliseconds(750)){
+
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = 0.0;
+        drive_msg.drive.steering_angle = 0.0;
+        drive_publisher_->publish(drive_msg);
+
+        RCLCPP_INFO(this->get_logger(), "Time since last Control msg: %d, Stopping car.", duration_since_last_control_msg.count());
+    }
 
     //RCLCPP_INFO(this->get_logger(), "Odom received: x=%.6f, y=%.6f, yaw=%.2f, v=%.2f", current_state.x, current_state.y, current_state.yaw, current_state.v);
     
@@ -572,34 +586,46 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
     //to avoid both MPC running at the same time
     //overloading in Userparam results in NAN sol
-    if (backup_flag){
-      //start backup grampc
-      ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
-      grampc_setparam_real_vector(grampc_backup, "x0", x0);
-      grampc_run(grampc_backup);
-      //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
-      //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
 
-      // Extract backup control command.
-      backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
-      backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+    //start backup grampc
+    ctypeRNum x0[NX] = {current_state.x, current_state.y, current_state.yaw, current_state.v};
+    grampc_setparam_real_vector(grampc_backup, "x0", x0);
+    grampc_run(grampc_backup);
+    //RCLCPP_INFO(this->get_logger(), "Finished GRAMPC_backup run. Status %d", grampc_backup->sol->status);
+    //grampc_printstatus(grampc_supervisor->sol->status, STATUS_LEVEL_DEBUG);
+    
+    // Extract backup control command.
+    backup_steering_angle = grampc_backup->sol->unext[0]; //Extract the solution for k from Grampc for the correct steering angle
+    backup_v = grampc_backup->sol->xnext[3]; // Extract the velocity state of the next solution ste */
+    //printf("backup_flag == true \n");
+    if (backup_flag){
+    if(!isnan(backup_v) && !isnan(backup_steering_angle)){
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = backup_v;
+        drive_msg.drive.steering_angle = backup_steering_angle;
+        drive_publisher_->publish(drive_msg);
+
+        //publish_collision_flag();
+        RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
+      }
+      else{
+        auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
+        drive_msg.drive.speed = 0.0;
+        drive_msg.drive.steering_angle = 0.0;
+        drive_publisher_->publish(drive_msg);
+
+        RCLCPP_INFO(this->get_logger(), "Invalid Backup MPC calculations. Stopping car and shutting down...%f,  %f", backup_v, backup_steering_angle);
+        rclcpp::sleep_for(std::chrono::milliseconds(500));
+        rclcpp::shutdown();
+      }
 
       double nearest_center_pt_x = center_traj_[0]; //use nearest point in traj should equal first point of traj
       double nearest_center_pt_y = center_traj_[1];
       double nearest_center_pt_yaw = center_traj_[2];
 
-      //printf("backup_flag == true \n");
-      auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
-      drive_msg.drive.speed = backup_v;
-      drive_msg.drive.steering_angle = backup_steering_angle;
-      drive_publisher_->publish(drive_msg);
-
-      //publish_collision_flag();
-      RCLCPP_INFO(this->get_logger(), "Backup MPC still driving");
-
       //timer so RL has time to receive collisin flag
-      auto current_time = std::chrono::steady_clock::now();
-      auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time);
+      
+      auto duration = std::chrono::duration_cast<chrono::milliseconds>(current_time - start_time_backup_mpc);
          
       //printf("Distance error = %f, Heading error = %f \n", euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y), abs(wrapToPi(current_state.yaw- nearest_center_pt_yaw)));
       if (duration > std::chrono::milliseconds(10) && euclidian_distance(current_state.x, current_state.y, nearest_center_pt_x, nearest_center_pt_y) < 0.5 && abs((current_state.yaw- nearest_center_pt_yaw) < 1)){
@@ -633,6 +659,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
   if yes apply PP input 
   if no: start backup mpc and wait till the car has returned to a safe starting point  */
   void control_callback(const ackermann_msgs::msg::AckermannDriveStamped::SharedPtr msg){
+    start_time_control_msg = std::chrono::steady_clock::now();
     my_input input_pp;
     input_pp.steer= msg->drive.steering_angle;
     input_pp.speed = msg->drive.speed;
@@ -710,7 +737,7 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
         publish_collision_flag();
         //rclcpp::sleep_for(std::chrono::milliseconds(500));
         //rclcpp::shutdown();
-        start_time = std::chrono::steady_clock::now();
+        start_time_backup_mpc = std::chrono::steady_clock::now();
 
       }
       //found no solution
@@ -914,7 +941,11 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<MPCNode>());
+  rclcpp::Node::SharedPtr node = std::make_shared<MPCNode>();
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node);
+  executor.spin();
+  //rclcpp::spin(std::make_shared<MPCNode>());
   rclcpp::shutdown();
   return 0;
 }
