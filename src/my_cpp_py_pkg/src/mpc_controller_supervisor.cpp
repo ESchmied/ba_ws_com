@@ -712,8 +712,8 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
       //printf("backup_flag == false \n");
       //found a feasible solution
       if (!isnan(v_next) && !isnan(steering_angle) && !infeasible){ //if feasible and we have a sol 
-        backup_steering_angle = steering_angle;
-        backup_v = v_next;
+        //backup_steering_angle = steering_angle;
+        //backup_v = v_next;
  
         auto drive_msg = ackermann_msgs::msg::AckermannDriveStamped();
         drive_msg.drive.speed = input_pp.speed;
@@ -941,11 +941,11 @@ typeGRAMPC* create_grampc_instance(UserParam* param){
 
 int main(int argc, char **argv) {
   rclcpp::init(argc, argv);
-  rclcpp::Node::SharedPtr node = std::make_shared<MPCNode>();
-  rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(node);
-  executor.spin();
-  //rclcpp::spin(std::make_shared<MPCNode>());
+  //rclcpp::Node::SharedPtr node = std::make_shared<MPCNode>();
+  //rclcpp::executors::MultiThreadedExecutor executor;
+  //executor.add_node(node);
+  //executor.spin();
+  rclcpp::spin(std::make_shared<MPCNode>());
   rclcpp::shutdown();
   return 0;
 }
