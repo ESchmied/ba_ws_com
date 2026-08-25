@@ -42,10 +42,12 @@
 #define SIN(a)		sinf(a)
 #define COS(a)		cosf(a)
 #define TAN(a)      tanf(a)
+#define ATAN(a)     atanf(a)
 #else
 #define SIN(a)		sin(a)
 #define COS(a)		cos(a)
 #define TAN(a)      tan(a)
+#define ATAN(a)     atan(a)
 #endif
 
 /* square macro */
@@ -310,7 +312,7 @@ void ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, ty
     *Nx = 4;    //Number of states [x, y, yaw, v]
     *Nu = 2;    //Number of controls [steering, acceleration]
     *Np = 0;    //Number of paramters
-    *Nh = 3;    //Number of inequalities (eigenltich 3)
+    *Nh = 2;    //Number of inequalities (eigenltich 3)
     *Ng = 0;    //Number of equalities
     *NgT = 0;
     *NhT = 0;
@@ -325,11 +327,19 @@ void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
 {
     UserParam* param = (UserParam*) userparam;
     double L = param->wheelbase; //abstand vorder radachse hintere Radachse
+    //double LR = param->lr;
+    //double beta = ATAN(LR/(L)* TAN(u[0]));
 
     out[0] = x[3] * COS(x[2]);            //dx/dt =v*cos(theta)
     out[1] = x[3] * SIN(x[2]);            // dy/dt = v * sin(theta)
     out[2] = (x[3] / L) * TAN(u[0]);      // dtheta/dt = v / L * tan(steering)
     out[3] = u[1];                        // dv/dt = a
+
+    //out[0] = x[3] * COS(x[2]+ beta);            //dx/dt =v*cos(theta)
+    //out[1] = x[3] * SIN(x[2] + beta);            // dy/dt = v * sin(theta)
+    //out[2] = (x[3] / L)* TAN(u[0])*COS(beta);      // dtheta/dt = v / L * tan(steering)
+    //out[3] = u[1];                        // dv/dt = a
+
     //printf("ffct: u[0]: %f,u[1]:%f, x[2]: %f, x[3]: %f, dx/dt=%.3f, dy/dt=%3.f, dtheta/dt=%.3f, dv/dt=%.3f, \n", u[0], u[1], x[2], x[3], out[0], out[1], out[2], out[3]);
 }
 
@@ -339,12 +349,15 @@ void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
     // vec zur opimierung der berechnung i guess
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
-
+    //double LR = param->lr;
+    //double beta = ATAN(LR/(L)* TAN(u[0]));
     out[0] = 0.0; //ableitung nach X[0]
-    out[1] = 0.0;
+    out[1] = 0.0; //ableitung nach x[1]
     out[2] = -x[3] * SIN(x[2]) * vec[0] + x[3] * COS(x[2]) * vec[1];                //-v*sin(theta)*vec[0] + v*cos(theta)*vec[1]
     out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2] * TAN(u[0]) / L;      //vec[0]*cos(theta) + vec[1]*sin(theta) + vec[2]*tan(steering_angle)/L
 
+    //out[2] = -x[3] * SIN(x[2]) * vec[0] + x[3] * COS(x[2]) * vec[1];                //-v*sin(theta)*vec[0] + v*cos(theta)*vec[1]
+    //out[3] = vec[0] * COS(x[2]) + vec[1] * SIN(x[2]) + vec[2]/L*TAN(u[0])*COS(beta);
     //t wird nicht verwendet?
     //printf("dfdx: yaw=%.3f, v=%.3f, vec0=%.3f, vec1=%.3f, vec2=%.3f \n", x[2], x[3], vec[0], vec[1], vec[2]);
 
@@ -354,9 +367,13 @@ void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNu
 {
     UserParam* param = (UserParam*)userparam;
     double L = param->wheelbase;
-
+    //double LR = param->lr;
+    //double beta = ATAN(LR/(L)* TAN(u[0]));
     out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) * vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
     out[1] = vec[3];                                        //a = 1*vec[3]
+
+    //out[0] = (x[3] / L) * (1.0 / POW2(COS(u[0]))) *COS(beta)* vec[2]; //steering = (v/L) *(1/COS(steering)^2) *vec[2]
+    //out[1] = vec[3];      
     //printf("dfdu: steering: %f, vec[3]: %f\n", out[0], out[1]);
 }
 /** Jacobian df/dp multiplied by vector vec, i.e. (df/dp)^T*vec or vec^T*(df/dp) **/
@@ -374,7 +391,7 @@ void lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     int ref_length = param ->ref_length; //was ist ref_length? vielleicht die waypoint listen länge
 
     int nearest_idx = getNearestIndex(x[0], x[1], ref_traj, ref_length);
-    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length? falls liste zuende 
+    int next_idx = (nearest_idx + 1)%ref_length; //warum modulo ref_length? falls liste zuende: shouldn't happen
     //printf("ref_length lfct:%d \n ", ref_length);
     //printf("nearest_idx: %d, next_idx:%d\n", nearest_idx, next_idx);
     //printf("nearest idx: %d, next idx: %d t: %f \n", nearest_idx, next_idx, t);
@@ -564,7 +581,7 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //2 verschiedene restraints für v min und v max 
     // todo stehen und rückwärtsfahren erlauben  auto fährt trotzdem rückwärts
     out[0] = x[3] - 1.2* param->max_velocity;    // v <= 1.2 * v_max //um wiedersprüche mit optimaler geschwindigkeit zu vermeiden   
-    out[1] = -abs(x[3]);                         // 0 <= |v| darf nicht stehen bleiben /davor 0<= -x[3]
+    //out[1] = -x[3];                         // 0 <= |v| darf nicht stehen bleiben /davor 0<= -x[3]
 
     //border constraint 
     //project car pos onto centerline
@@ -622,10 +639,10 @@ void hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, 
     //printf("car_width: %f\n" , car_width);
     
     //das kleinere minus das größere
-    out[2] = POW2(distance_center_car) - POW2(distance_border_center - 0.1); //abstand auto-centerline < abstand centerline-border - car_width 
+    //out[1] = POW2(distance_center_car) - POW2(distance_border_center - car_width); //abstand auto-centerline < abstand centerline-border - car_width 
+    //out[1] = POW2(distance_center_car) - POW2(2*distance_border_center);
     //out[2] = distance_center_car - (distance_border_center - car_width );
-    //out[2] = distance_center_car - 0.6; //probe weise Schlauch um die centerline als Constraint
-
+    out[1] = distance_center_car - 1.3; //probe weise Schlauch um die centerline als Constraint
 }
 /** Jacobian dh/dx multiplied by vector vec, i.e. (dh/dx)^T*vec or vec^T*(dg/dx) **/
 void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, typeUSERPARAM *userparam)
@@ -668,15 +685,15 @@ void dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum 
     //ableitung h nach x mal vector (but why?)
     //output sortiert nach der X[] variable die abgeleitet wird out[0] ^= x[0]'
     //ableitung für quadrierte Contraints
-    out[0] = -2* (proj_center_point.x - x[0])* vec[2]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
-    out[1] = -2* (proj_center_point.y - x[1])* vec[2];
+    out[0] = -2* (proj_center_point.x - x[0])* vec[1]; //distanz zur border wird als "pro Aufruf" konstant angenommen und fällt weg
+    out[1] = -2* (proj_center_point.y - x[1])* vec[1];
     
     //ableitung der normalen Constraints
-    //out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[2];
-    //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[2];
+    //out[0] = -(proj_center_point.x - x[0]) /(euclidian_distance(proj_center_point, car_pos))*vec[1];
+    //out[1] = -(proj_center_point.y - x[1]) / (euclidian_distance(proj_center_point, car_pos))*vec[1];
     
     out[2] = 0;
-    out[3] = vec[0]- vec[1]; //reine optimierung kommt vom gradient based mpc
+    out[3] = vec[0]; //- vec[1]; //reine optimierung kommt vom gradient based mpc
     //printf("vec[2]: %lf \n", vec[2]);
 
 }
